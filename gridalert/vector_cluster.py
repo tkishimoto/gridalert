@@ -11,6 +11,7 @@ from sklearn.ensemble import IsolationForest
 
 from .sqlite3_helper import *
 from .util import reader as util_reader
+from .const import Const as const
 
 class VectorCluster:
 
@@ -51,12 +52,10 @@ class VectorCluster:
 
             model = '%s.%s.vec.model' % (self.base_conf.name,
                                         self.service)
-
             self.tv_path = self.tv_conf.dir + '/' + model
 
             model = '%s.%s.cls.model' % (self.base_conf.name,
                                         self.service)
-              
             self.vc_path = self.vc_conf.dir + '/' + model
 
             if self.tv_conf.type == 'doc2vec':
@@ -90,13 +89,13 @@ class VectorCluster:
 
     def dump_to_db(self, tags, pred_data, data):
         db = Sqlite3Helper(self.conf, self.index)
-        db.create_grid_table()
+        db.create_table()
 
         labels = []
         means  = []
 
         for ii, pred in enumerate(pred_data):
-            if pred == 1:
+            if pred == const.NORMAL:
                 means.append(data[ii]) 
 
         means = np.mean(np.array(means), axis=0)
@@ -121,13 +120,11 @@ class VectorCluster:
             # 'tag', 'host', 'date', 'prediction', 'feature', 'diff'
             tag = tags[ii]
             prediction = pred_data[ii]
-            feature = label
-            diff = 'unknown'
-          
-            buffer = [tag, str(prediction), feature, diff]
+        
+            update = 'prediction="%s",feature="%s"' % (prediction, 
+                                                       label)
+            where = 'tag="%s"' % tag 
 
-            buffers.append(buffer)
-
-        db.replace_grid_many(buffers)
+            db.update(update, where)
 
 

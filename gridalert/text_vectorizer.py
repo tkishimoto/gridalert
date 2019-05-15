@@ -19,8 +19,8 @@ class TextVectorizer:
         self.base_conf = conf.base_confs[index]
         self.tv_conf   = conf.tv_confs[index]
 
-        self.service = ''
-        self.path    = ''
+        self.service   = ''
+        self.path      = ''
 
         self.conf = conf
 
@@ -58,13 +58,13 @@ class TextVectorizer:
         tv_conf = self.tv_conf
 
         db = Sqlite3Helper(self.conf, self.index) 
-        fields = db.select_data_service(self.service)
-
-        logger.info('total samples : %s' % (len(fields)))
+        fields = db.select(where='service="%s"' % self.service)
 
         if (len(fields) <= 0):
             logger.info('no trainig data')
             return 
+
+        logger.info('total samples : %s' % (len(fields)))
 
         trainings = []       
         for counter, docs in enumerate(fields):

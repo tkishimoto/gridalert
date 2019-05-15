@@ -6,6 +6,7 @@ from .data_converter import *
 from .text_vectorizer import *
 from .vector_cluster import *
 from .data_visualizer import *
+from .anomaly_alert import *
 
 class GridAlert:
 
@@ -49,3 +50,12 @@ class GridAlert:
             dv.initialize()
             dv.visualize()
 
+        dv = DataVisualizer(self.conf, 0)
+        dv.initialize()
+        dv.make_top_html()
+
+
+    def alert(self):
+        aa = AnomalyAlert(self.conf)
+        aa.initialize()
+        aa.send_mail()

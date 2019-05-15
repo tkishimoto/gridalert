@@ -4,6 +4,7 @@ logger = getLogger(__name__)
 
 import os
 import glob
+
 from .sqlite3_helper import *
 from .template import *
 
@@ -51,7 +52,7 @@ class DataConverter:
         exists = os.path.exists(db_conf.path)
 
         db = Sqlite3Helper(self.conf, self.index) 
-        db.create_data_table()
+        db.create_table()
 
         buffers = []
         for ii, text in enumerate(texts):
@@ -61,10 +62,15 @@ class DataConverter:
             lines = open(text).readlines()
 
             for buffer in template.execute(lines):
-                # tag, cluster, host, date, service, metadata, data, label
 
-                if util_match.base_match(base_conf, buffer[2], buffer[3]):
+                if util_match.base_match(base_conf, 
+                    buffer[db_conf.get_data_index("host")], 
+                    buffer[db_conf.get_data_index("date")]):
+        
+                    # prediction, feature, diff
+                    buffer = buffer + ['unkonwn', 'unkonwn', 'unkonwn']
+
                     buffers.append(buffer)
 
-        db.insert_data_many(buffers)
+        db.insert_many(buffers)
         db.close()

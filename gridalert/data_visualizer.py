@@ -12,6 +12,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from .util import reader as util_reader
+from .util import html as util_html
+from .const import Const as const
 from .sqlite3_helper import *
 
 class DataVisualizer:
@@ -26,14 +28,14 @@ class DataVisualizer:
         self.vc_conf   = conf.vc_confs[index]
         self.dv_conf   = conf.dv_confs[index]
 
-        self.service  = ''
-        self.tv_path    = ''
-        self.vc_path    = ''
+        self.service   = ''
+        self.tv_path   = ''
+        self.vc_path   = ''
 
-        self.html_sub_dir = ''
-        self.html_path    = ''
-        self.html_top_path    = ''
-        self.plot_path    = ''
+        self.html_sub_dr   = ''
+        self.html_path     = ''
+        self.html_top_path = ''
+        self.plot_path     = ''
 
         self.conf = conf
 
@@ -68,27 +70,22 @@ class DataVisualizer:
 
             model = '%s.%s.vec.model' % (self.base_conf.name,
                                         self.service)
-
             self.tv_path = self.tv_conf.dir + '/' + model
 
             model = '%s.%s.cls.model' % (self.base_conf.name,
                                         self.service)
-
             self.vc_path = self.vc_conf.dir + '/' + model
 
             html_sub = '%s.%s.sub.html' % (self.base_conf.name,
                                            self.service)
-
             self.html_sub_dir = self.dv_conf.html_dir + '/' + html_sub
 
             plot = '%s.%s.svg' % (self.base_conf.name,
                                            self.service)
-            
             self.plot_path = self.dv_conf.plot_dir + '/' + plot
 
             html = '%s.%s.html' % (self.base_conf.name,
                                            self.service)
-
             self.html_path = self.dv_conf.html_dir + '/' + html
 
             if self.tv_conf.type == 'doc2vec':
@@ -103,8 +100,6 @@ class DataVisualizer:
                 self.diff_anomaly()
 
             self.make_sub_html()
-
-        self.make_top_html()
 
 
     def plot_doc2vec_isolationforest(self):
@@ -128,22 +123,21 @@ class DataVisualizer:
         for ix in range(ndim):
             for iy in range(ndim):
 
-                xx1  = []
-                xx2  = []
-                yy1  = []
-                yy2  = []
-                tag1 = []
-                tag2 = []
+                xx1, xx2  = [], []
+                yy1, yy2  = [], []
+                tag1, tag2 = [], []
 
                 for ii, pred in enumerate(pred_data):
-                    if pred == 1:
+                    if pred == const.NORMAL:
                         xx1.append(data[ii][ix])
                         yy1.append(data[ii][iy])
-                        tag1.append('%s/%s.html' % (self.html_sub_dir, tags[ii]))
+                        tag1.append('%s/%s.html' % (self.html_sub_dir, 
+                                                    tags[ii]))
                     else:
                         xx2.append(data[ii][ix])
                         yy2.append(data[ii][iy])
-                        tag2.append('%s/%s.html' % (self.html_sub_dir, tags[ii]))
+                        tag2.append('%s/%s.html' % (self.html_sub_dir, 
+                                                    tags[ii]))
 
                 if (ix == iy):
                     axes[iy][ix].hist([xx1, xx2], 
@@ -170,12 +164,12 @@ class DataVisualizer:
 
     def diff_anomaly(self):
         db = Sqlite3Helper(self.conf, self.index)
-        fields_grid = db.select_grid_service(self.service)
+        fields = db.select(where='service="%s"' % self.service)
 
         center = {}
-        distance = 9999
+        distance = const.INVALID
 
-        for field in fields_grid:
+        for field in fields:
             feature = field['feature']
            
             data = {}
@@ -186,36 +180,34 @@ class DataVisualizer:
                 distance = float(data['distance'])
                 center = field
 
-        where = 'tag="%s"' % center['tag']
-        center_data = db.select_data_where(where)[0]
-
-        for field in fields_grid:
-            where = 'tag="%s"' % field['tag']
-            data = db.select_data_where(where)[0]
-
-            diff = difflib.unified_diff(center_data['data'].splitlines(),
-              data['data'].splitlines(),
+        for field in fields:
+            diff = difflib.unified_diff(center['data'].splitlines(),
+              field['data'].splitlines(),
               'normal event',
               'anomaly event',
-              '%s %s %s' % (center_data['host'], self.service, center_data['date']),
-              '%s %s %s' % (data['host'], self.service, data['date']))
+              '%s %s %s' % (center['host'], 
+                            self.service, 
+                            center['date']),
+              '%s %s %s' % (field['host'], 
+                            self.service, 
+                            field['date']))
 
             update = 'diff="%s"' % ('\n'.join(diff))
             where = 'tag="%s"' % field['tag']
 
-            db.update_grid(update, where)
+            db.update(update, where)
 
 
     def make_sub_html(self):
         
         db   = Sqlite3Helper(self.conf, self.index)
-        fields = db.select_grid_service(self.service)
+        fields = db.select(where='service="%s"' % self.service)
  
         if not os.path.exists(self.html_sub_dir):
             os.makedirs(self.html_sub_dir)
 
         html = open(self.html_path, 'w')
-        self.html_header(html)
+        util_html.header(html)
         html.write('<h4>gridalert clustering visualization</h4>\n')
         html.write('<ul>\n')
         html.write('<li>host machines = %s</li>\n' % (','.join(self.base_conf.hosts)))
@@ -228,76 +220,51 @@ class DataVisualizer:
         html.write('<h4>link to orignal logs</h4>\n')
         html.write('<ul>\n')
         for field in fields:
-            where = 'tag="%s"' % field['tag']
-            data = db.select_data_where(where)[0]
-
             if field['prediction'] == '1':
                 html.write('<li><a href="%s/%s.html">%s %s %s</a></li>\n' % (self.html_sub_dir, 
-                                                                             data['tag'], 
-                                                                             data['host'], 
-                                                                             data['service'], 
-                                                                             data['date']))
+                                                                             field['tag'], 
+                                                                             field['host'], 
+                                                                             field['service'], 
+                                                                             field['date']))
             else:
                 html.write('<li><a href="%s/%s.html">%s %s %s (anomaly)</a></li>\n' % (self.html_sub_dir, 
-                                                                                       data['tag'], 
-                                                                                       data['host'], 
-                                                                                       data['service'], 
-                                                                                       data['date']))
+                                                                                       field['tag'], 
+                                                                                       field['host'], 
+                                                                                       field['service'], 
+                                                                                       field['date']))
         html.write('</ul>\n')
-        self.html_footer(html)
+        util_html.footer(html)
         html.close()
 
         for field in fields:
-            where = 'tag="%s"' % field['tag']
-            data = db.select_data_where(where)[0]
-            html = open('%s/%s.html' % (self.html_sub_dir, data['tag']), 'w')
-            self.html_header(html)
+            html = open('%s/%s.html' % (self.html_sub_dir, field['tag']), 'w')
+            util_html.header(html)
             html.write('<h4>original logs</h4>\n')
             html.write('<ul>\n')
-            html.write('<li>host machine = %s</li>\n' % (data['host']))
-            html.write('<li>service = %s</li>\n' % (data['service']))
-            html.write('<li>date = %s</li>\n' % (data['date']))
+            html.write('<li>host machine = %s</li>\n' % (field['host']))
+            html.write('<li>service = %s</li>\n' % (field['service']))
+            html.write('<li>date = %s</li>\n' % (field['date']))
             html.write('</ul>\n')
-            html.write('%s' % data['data'].replace('\n', '<br>'))
+            html.write('%s' % field['data'].replace('\n', '<br>'))
             html.write('<h4>diff to normal log</h4>\n')
             html.write('%s' % field['diff'].replace('\n', '<br>'))
-            self.html_footer(html)
+            util_html.footer(html)
             html.close()
 
          
     def make_top_html(self):
 
         html = open(self.html_top_path, 'w')
-        self.html_header(html)
+        util_html.header(html)
         html.write('<h4>gridalert top page</h4>\n')
         html.write('<ul>\n')
-        for name in self.conf.get_base_names():
+        for ii, name in enumerate(self.conf.get_base_names()):
             html.write('<li>%s</li>\n' % name) 
             html.write('<ul>\n')
-            for service in self.base_conf.services:
+            for service in self.conf.base_confs[ii].services:
                 html.write('<li><a href="./%s.%s.html">%s</a></li>\n' % (name, service, service)) 
             html.write('</ul>\n')
 
         html.write('</ul>\n')
-        self.html_footer(html)
+        util_html.footer(html)
         html.close()
-
-
-    def html_header(self, html):
-        html.write('<!DOCTYPE html>\n')
-        html.write('<html>\n')
-        html.write('<head>\n')
-        html.write('<title>gridalert monitor</title>\n')
-        html.write('<meta charset="UTF-8">\n')
-        html.write('</head>\n')
-        html.write('<body>\n')
-
-    def html_footer(self, html):
-        html.write('</body>\n')
-        html.write('</html>\n')
- 
-
-
- 
-
-

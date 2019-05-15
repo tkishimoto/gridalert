@@ -9,6 +9,7 @@ class GridAlertConf:
         self.work_dir   = ''     
 
         self.db_conf    = DatabaseConf()
+        self.aa_conf    = AnomalyAlertConf()
  
         self.base_confs = []
         self.dc_confs   = []
@@ -25,21 +26,24 @@ class DatabaseConf:
 
     def __init__(self):
 
-        self.path              = '' 
-        self.type              = 'sqlite3'
+        self.path         = '' 
+        self.type         = 'sqlite3'
 
-        self.data_table_name   = 'data' 
-        self.data_column_names = ['tag', 'cluster', 'host', 'date', 
-                                 'service', 'metadata', 'data', 'label']
-        self.data_column_types = ['text unique', 'text', 'text', 'text',
-                                  'text', 'text', 'text', 'text'] 
+        self.table_name   = 'data' 
+        self.column_names = ['tag', 'cluster', 'host', 'date', 
+                             'service', 'metadata', 'data', 'label',
+                             'prediction', 'feature', 'diff']
+        self.column_types = ['text unique', 'text', 'text', 'text',
+                             'text', 'text', 'text', 'text',
+                             'text', 'text', 'text'] 
+        
+    def get_data_index(self, column):
+        return self.column_names.index(column)
+        
+    def get_grid_index(self, column):
+        return self.column_names.index(column)
 
-        self.grid_table_name   = 'grid' 
-        self.grid_column_names = ['tag', 'prediction', 'feature', 'diff']
-        self.grid_column_types = ['text unique', 'text', 'text', 'text'] 
-        
-        self.select_where = ''
-        
+
 class BaseConf:
 
     def __init__(self):
@@ -97,4 +101,8 @@ class DataVisualizerConf:
 
         self.use_diff      = True
 
+class AnomalyAlertConf:
 
+    def __init__(self):
+
+        self.alert_filter = ''
