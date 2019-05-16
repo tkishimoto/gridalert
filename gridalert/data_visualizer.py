@@ -44,25 +44,21 @@ class DataVisualizer:
 
         for service in self.cl_conf['services'].split(','):
             self.service = service
+            prefix = '%s.%s' % (self.cl_conf['name'], service)
 
-            model = '%s.%s.vec.model' % (self.cl_conf['name'],
-                                         self.service)
+            model = '%s.vec.model' % (prefix)
             self.model_vec_path = self.cl_conf['model_dir'] + '/' + model
 
-            model = '%s.%s.cls.model' % (self.cl_conf['name'],
-                                         self.service)
+            model = '%s.cls.model' % (prefix)
             self.model_cls_path = self.cl_conf['model_dir'] + '/' + model
 
-            html = '%s.%s.html' % (self.cl_conf['name'],
-                                   self.service)
+            html = '%s.html' % (prefix)
             self.html_sub_path = self.cl_conf['html_dir'] + '/' + html
 
-            html_dir = '%s.%s.sub.html' % (self.cl_conf['name'],
-                                           self.service)
+            html_dir = '%s.sub.html' % (prefix)
             self.html_sub_dir = self.cl_conf['html_dir'] + '/' + html_dir
 
-            plot = '%s.%s.svg' % (self.cl_conf['name'],
-                                  self.service)
+            plot = '%s.svg' % (prefix)
             self.plot_path = self.cl_conf['plot_dir'] + '/' + plot
 
             if self.cl_conf['vector_type'] == 'doc2vec':

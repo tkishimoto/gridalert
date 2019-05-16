@@ -32,13 +32,12 @@ class VectorCluster:
 
         for service in self.cl_conf['services'].split(','):
             self.service = service
+            prefix = '%s.%s' % (self.cl_conf['name'], service)
 
-            model = '%s.%s.vec.model' % (self.cl_conf['name'],
-                                         self.service)
+            model = '%s.vec.model' % (prefix)
             self.model_vec_path = self.cl_conf['model_dir'] + '/' + model
 
-            model = '%s.%s.cls.model' % (self.cl_conf['name'],
-                                         self.service)
+            model = '%s.cls.model' % (prefix)
             self.model_cls_path = self.cl_conf['model_dir'] + '/' + model
 
             if self.cl_conf['vector_type'] == 'doc2vec':
