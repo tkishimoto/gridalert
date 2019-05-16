@@ -2,7 +2,6 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
-import os
 import glob
 
 from .sqlite3_helper import *

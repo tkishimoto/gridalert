@@ -236,17 +236,12 @@ class DataVisualizer:
         html.write('<h4>gridalert top page</h4>\n')
         html.write('<ul>\n')
  
-        clusters = []
-
-        for cluster in self.conf.sections():
-            if 'cluster/' in cluster:
-                clusters.append(cluster)
-
-        for name in clusters:
+        for name in self.conf['DEFAULT']['clusters'].split(','):
             html.write('<li>%s</li>\n' % self.conf[name]['name']) 
             html.write('<ul>\n')
             for service in self.conf[name]['services'].split(','):
-                html.write('<li><a href="./%s.%s.html">%s</a></li>\n' % (self.conf[name]['name'], service, service)) 
+                html.write('<li><a href="./%s.%s.html">%s</a></li>\n' % (self.conf[name]['name'], 
+                                                                         service, service)) 
             html.write('</ul>\n')
 
         html.write('</ul>\n')

@@ -51,13 +51,7 @@ class AnomalyAlert:
         message += '\n\n'
         message += 'The following hosts and servides are currently monitored:\n\n'
 
-        clusters = []
-
-        for cluster in self.conf.sections():
-            if 'cluster/' in cluster:
-                clusters.append(cluster)
-
-        for name in clusters: 
+        for name in self.conf['DEFAULT']['clusters'].split(','): 
             message += '* %s\n' % self.conf[name]['name']
 
             for service in self.conf[name]['services'].split(','):
