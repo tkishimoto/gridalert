@@ -12,52 +12,38 @@ from .util import text as util_text
 
 class TextVectorizer:
 
-    def __init__(self, conf, index):
-        self.conf      = conf
-        self.index     = index
-        self.db_conf   = conf.db_conf
-        self.base_conf = conf.base_confs[index]
-        self.tv_conf   = conf.tv_confs[index]
+    def __init__(self, conf, cluster):
 
-        self.service   = ''
-        self.path      = ''
+        self.conf       = conf
+        self.cluster    = cluster
 
-        self.conf = conf
+        self.db_conf    = conf['db']
+        self.cl_conf    = conf[cluster]
 
-
-    def initialize(self):
-
-        work_dir = self.conf.work_dir
-
-        if not self.db_conf.path:
-            self.db_conf.path = work_dir + '/database.db'
-
-        if not self.tv_conf.dir:
-            self.tv_conf.dir = work_dir
-
+        self.service    = ''
+        self.model_path = ''
 
     def vectorize(self):
 
-        for service in self.base_conf.services:
+        for service in self.cl_conf['services'].split(','):
             self.service = service
 
-            model = '%s.%s.vec.model' % (self.base_conf.name,
-                                            self.service)
-            self.path = self.tv_conf.dir + '/' + model
+            model = '%s.%s.vec.model' % (self.cl_conf['name'],
+                                         self.service)
+            self.model_path = self.cl_conf['model_dir'] + '/' + model
 
-            if self.db_conf.type == 'sqlite3':
-                if self.tv_conf.type == 'doc2vec':
+            if self.db_conf['type'] == 'sqlite3':
+                if self.cl_conf['vector_type'] == 'doc2vec':
                     self.sqlite3_to_doc2vec()
                 else:
-                    logger.info('%s not supported' % (self.tv_conf.type))
+                    logger.info('%s not supported' % (self.cl_conf['vector_type']))
             else:
-                logger.info('%s not supported' % (self.db_conf.type))
+                logger.info('%s not supported' % (self.db_conf['type']))
 
 
     def sqlite3_to_doc2vec(self):
-        tv_conf = self.tv_conf
 
-        db = Sqlite3Helper(self.conf, self.index) 
+        db = Sqlite3Helper(self.db_conf) 
         fields = db.select(where='service="%s"' % self.service)
 
         if (len(fields) <= 0):
@@ -75,14 +61,15 @@ class TextVectorizer:
             trainings.append(TaggedDocument(words=data.split(), 
                              tags=[docs['tag']]))
         
+        cl_conf = self.cl_conf
         model = Doc2Vec(documents = trainings, 
-                        dm = tv_conf.dm, 
-                        vector_size = tv_conf.vector_size, 
-                        window = tv_conf.window, 
-                        min_count = tv_conf.min_count, 
-                        workers = tv_conf.workers,
-                        epochs = tv_conf.epochs,
-                        seed = tv_conf.seed) 
+                        dm = int(cl_conf['vector_dm']), 
+                        vector_size = int(cl_conf['vector_size']), 
+                        window = int(cl_conf['vector_window']), 
+                        min_count = int(cl_conf['vector_min_count']), 
+                        workers = int(cl_conf['vector_workers']),
+                        epochs = int(cl_conf['vector_epochs']),
+                        seed = int(cl_conf['vector_seed'])) 
 
-        model.save(self.path)
+        model.save(self.model_path)
 

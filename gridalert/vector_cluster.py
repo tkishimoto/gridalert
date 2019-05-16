@@ -15,80 +15,62 @@ from .const import Const as const
 
 class VectorCluster:
 
-    def __init__(self, conf, index):
+    def __init__(self, conf, cluster):
 
-        self.conf      = conf
-        self.index     = index
-        self.db_conf   = conf.db_conf
-        self.base_conf = conf.base_confs[index]
-        self.tv_conf   = conf.tv_confs[index]
-        self.vc_conf   = conf.vc_confs[index]
+        self.conf       = conf
+        self.cluster    = cluster
 
-        self.service = ''
-        self.tv_path    = ''
-        self.vc_path    = ''
+        self.db_conf    = conf['db']
+        self.cl_conf    = conf[cluster]
 
-        self.conf = conf
-
-
-    def initialize(self):
-
-        work_dir = self.conf.work_dir
-
-        if not self.db_conf.path:
-            self.db_conf.path = work_dir + '/database.db'
-
-        if not self.tv_conf.dir:
-            self.tv_conf.dir = work_dir
-
-        if not self.vc_conf.dir:
-                self.vc_conf.dir = work_dir
+        self.service    = ''
+        self.model_vec_path = ''
+        self.model_cls_path = ''
 
 
     def clustering(self):
 
-        for service in self.base_conf.services:
+        for service in self.cl_conf['services'].split(','):
             self.service = service
 
-            model = '%s.%s.vec.model' % (self.base_conf.name,
-                                        self.service)
-            self.tv_path = self.tv_conf.dir + '/' + model
+            model = '%s.%s.vec.model' % (self.cl_conf['name'],
+                                         self.service)
+            self.model_vec_path = self.cl_conf['model_dir'] + '/' + model
 
-            model = '%s.%s.cls.model' % (self.base_conf.name,
-                                        self.service)
-            self.vc_path = self.vc_conf.dir + '/' + model
+            model = '%s.%s.cls.model' % (self.cl_conf['name'],
+                                         self.service)
+            self.model_cls_path = self.cl_conf['model_dir'] + '/' + model
 
-            if self.tv_conf.type == 'doc2vec':
-                if self.vc_conf.type == 'isolationforest':
+            if self.cl_conf['vector_type'] == 'doc2vec':
+                if self.cl_conf['cluster_type'] == 'isolationforest':
                     self.doc2vec_to_isolationforest()
                 else:
-                    logger.info('%s not supported' % (self.vc_conf.type))
+                    logger.info('%s not supported' % (self.cl_conf['cluster_type']))
             else:
-                logger.info('%s not supported' % (self.tv_conf.type))
-
+                logger.info('%s not supported' % (self.cl_conf['vector_type']))
 
 
     def doc2vec_to_isolationforest(self):
-        vc_conf = self.vc_conf
  
-        data, tags = util_reader.get_data_from_doc2vec(self.tv_path)
+        data, tags = util_reader.get_data_from_doc2vec(self.model_vec_path)
         data = np.array(data)
       
-        model = IsolationForest(behaviour=vc_conf.behaviour,
-                                n_estimators=vc_conf.n_estimators,
-                                contamination=vc_conf.contamination,
-                                random_state=vc_conf.random_state,
-                                max_samples=vc_conf.max_samples)
+        cl_conf = self.cl_conf
+        model = IsolationForest(behaviour=cl_conf['cluster_behaviour'],
+                                n_estimators=int(cl_conf['cluster_n_estimators']),
+                                contamination=cl_conf['cluster_contamination'],
+                                random_state=int(cl_conf['cluster_random_state']),
+                                max_samples=int(cl_conf['cluster_max_samples']))
         model.fit(data)
         pred_data = model.predict(data)
 
         self.dump_to_db(tags, pred_data, data)          
  
-        pickle.dump(model, open(self.vc_path, 'wb'))
+        pickle.dump(model, open(self.model_cls_path, 'wb'))
 
 
     def dump_to_db(self, tags, pred_data, data):
-        db = Sqlite3Helper(self.conf, self.index)
+        db = Sqlite3Helper(self.db_conf)
         db.create_table()
 
         labels = []

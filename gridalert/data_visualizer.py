@@ -18,85 +18,62 @@ from .sqlite3_helper import *
 
 class DataVisualizer:
 
-    def __init__(self, conf, index):
+    def __init__(self, conf, cluster=const.INVALID):
 
-        self.conf      = conf
-        self.index     = index
-        self.db_conf   = conf.db_conf
-        self.base_conf = conf.base_confs[index]
-        self.tv_conf   = conf.tv_confs[index]
-        self.vc_conf   = conf.vc_confs[index]
-        self.dv_conf   = conf.dv_confs[index]
+        self.conf       = conf
+        self.cluster    = cluster
+
+        self.db_conf    = conf['db']
+        
+        if not cluster == const.INVALID:
+            self.cl_conf    = conf[cluster]
 
         self.service   = ''
-        self.tv_path   = ''
-        self.vc_path   = ''
+        self.model_vec_path   = ''
+        self.model_cls_path   = ''
 
-        self.html_sub_dr   = ''
-        self.html_path     = ''
-        self.html_top_path = ''
+        self.html_sub_dir  = ''
+        self.html_sub_path = ''
+
         self.plot_path     = ''
 
         self.conf = conf
 
 
-    def initialize(self):
-
-        work_dir = self.conf.work_dir
-
-        if not self.db_conf.path:
-            self.db_conf.path = work_dir + '/database.db'
-
-        if not self.tv_conf.dir:
-            self.tv_conf.dir = work_dir
-
-        if not self.vc_conf.dir:
-            self.vc_conf.dir = work_dir
-
-        if not self.dv_conf.html_dir:
-            self.dv_conf.html_dir = work_dir
-
-        if not self.dv_conf.plot_dir:
-            self.dv_conf.plot_dir = work_dir
-
-        if not self.html_top_path:
-            self.html_top_path = work_dir + '/gridalert.top.html'
-
-
     def visualize(self):
 
-        for service in self.base_conf.services:
+        for service in self.cl_conf['services'].split(','):
             self.service = service
 
-            model = '%s.%s.vec.model' % (self.base_conf.name,
-                                        self.service)
-            self.tv_path = self.tv_conf.dir + '/' + model
+            model = '%s.%s.vec.model' % (self.cl_conf['name'],
+                                         self.service)
+            self.model_vec_path = self.cl_conf['model_dir'] + '/' + model
 
-            model = '%s.%s.cls.model' % (self.base_conf.name,
-                                        self.service)
-            self.vc_path = self.vc_conf.dir + '/' + model
+            model = '%s.%s.cls.model' % (self.cl_conf['name'],
+                                         self.service)
+            self.model_cls_path = self.cl_conf['model_dir'] + '/' + model
 
-            html_sub = '%s.%s.sub.html' % (self.base_conf.name,
+            html = '%s.%s.html' % (self.cl_conf['name'],
+                                   self.service)
+            self.html_sub_path = self.cl_conf['html_dir'] + '/' + html
+
+            html_dir = '%s.%s.sub.html' % (self.cl_conf['name'],
                                            self.service)
-            self.html_sub_dir = self.dv_conf.html_dir + '/' + html_sub
+            self.html_sub_dir = self.cl_conf['html_dir'] + '/' + html_dir
 
-            plot = '%s.%s.svg' % (self.base_conf.name,
-                                           self.service)
-            self.plot_path = self.dv_conf.plot_dir + '/' + plot
+            plot = '%s.%s.svg' % (self.cl_conf['name'],
+                                  self.service)
+            self.plot_path = self.cl_conf['plot_dir'] + '/' + plot
 
-            html = '%s.%s.html' % (self.base_conf.name,
-                                           self.service)
-            self.html_path = self.dv_conf.html_dir + '/' + html
-
-            if self.tv_conf.type == 'doc2vec':
-                if self.vc_conf.type == 'isolationforest':
+            if self.cl_conf['vector_type'] == 'doc2vec':
+                if self.cl_conf['cluster_type'] == 'isolationforest':
                     self.plot_doc2vec_isolationforest()
                 else:
-                    logger.info('%s not supported' % (self.vc_conf.type))
+                    logger.info('%s not supported' % (self.cl_conf['cluster_type']))
             else:
-                logger.info('%s not supported' % (self.tv_conf.type))
+                logger.info('%s not supported' % (self.cl_conf['vector_type']))
 
-            if self.dv_conf.use_diff:
+            if self.cl_conf['use_diff'] == 'True':
                 self.diff_anomaly()
 
             self.make_sub_html()
@@ -104,9 +81,9 @@ class DataVisualizer:
 
     def plot_doc2vec_isolationforest(self):
 
-        data, tags = util_reader.get_data_from_doc2vec(self.tv_path)
+        data, tags = util_reader.get_data_from_doc2vec(self.model_vec_path)
 
-        cluster_model = pickle.load(open(self.vc_path, 'rb'))
+        cluster_model = pickle.load(open(self.model_cls_path, 'rb'))
         pred_data = cluster_model.predict(data)
 
         self.plot_clustering(data, tags, pred_data)
@@ -163,7 +140,7 @@ class DataVisualizer:
 
 
     def diff_anomaly(self):
-        db = Sqlite3Helper(self.conf, self.index)
+        db = Sqlite3Helper(self.db_conf)
         fields = db.select(where='service="%s"' % self.service)
 
         center = {}
@@ -200,20 +177,20 @@ class DataVisualizer:
 
     def make_sub_html(self):
         
-        db   = Sqlite3Helper(self.conf, self.index)
+        db   = Sqlite3Helper(self.db_conf)
         fields = db.select(where='service="%s"' % self.service)
  
         if not os.path.exists(self.html_sub_dir):
             os.makedirs(self.html_sub_dir)
 
-        html = open(self.html_path, 'w')
+        html = open(self.html_sub_path, 'w')
         util_html.header(html)
         html.write('<h4>gridalert clustering visualization</h4>\n')
         html.write('<ul>\n')
-        html.write('<li>host machines = %s</li>\n' % (','.join(self.base_conf.hosts)))
+        html.write('<li>host machines = %s</li>\n' % (self.cl_conf['hosts']))
         html.write('<li>service = %s</li>\n' % (self.service))
-        html.write('<li>vecter algorithm = %s</li>\n' % (self.tv_conf.type))
-        html.write('<li>clustering algorithm = %s</li>\n' % (self.vc_conf.type))
+        html.write('<li>vecter algorithm = %s</li>\n' % (self.cl_conf['vector_type']))
+        html.write('<li>clustering algorithm = %s</li>\n' % (self.cl_conf['cluster_type']))
         html.write('</ul>\n')
 
         html.write('<object type="image/svg+xml" data="%s"></object>' % self.plot_path)
@@ -254,15 +231,22 @@ class DataVisualizer:
          
     def make_top_html(self):
 
-        html = open(self.html_top_path, 'w')
+        html = open(self.conf['DEFAULT']['html_dir'] + '/gridalert.top.html', 'w')
         util_html.header(html)
         html.write('<h4>gridalert top page</h4>\n')
         html.write('<ul>\n')
-        for ii, name in enumerate(self.conf.get_base_names()):
-            html.write('<li>%s</li>\n' % name) 
+ 
+        clusters = []
+
+        for cluster in self.conf.sections():
+            if 'cluster/' in cluster:
+                clusters.append(cluster)
+
+        for name in clusters:
+            html.write('<li>%s</li>\n' % self.conf[name]['name']) 
             html.write('<ul>\n')
-            for service in self.conf.base_confs[ii].services:
-                html.write('<li><a href="./%s.%s.html">%s</a></li>\n' % (name, service, service)) 
+            for service in self.conf[name]['services'].split(','):
+                html.write('<li><a href="./%s.%s.html">%s</a></li>\n' % (self.conf[name]['name'], service, service)) 
             html.write('</ul>\n')
 
         html.write('</ul>\n')

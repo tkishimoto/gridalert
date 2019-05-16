@@ -15,24 +15,19 @@ class AnomalyAlert:
 
     def __init__(self, conf):
         self.conf      = conf
-        self.db_conf   = conf.db_conf
-        self.aa_conf   = conf.aa_conf
+        self.db_conf   = conf['db']
+        self.aa_conf   = conf['alert']
 
         self.conf = conf
 
 
-    def initialize(self):
-
-        work_dir = self.conf.work_dir
-
-        if not self.db_conf.path:
-            self.db_conf.path = work_dir + '/database.db'
-
-
     def send_mail(self):
-        db = Sqlite3Helper(self.conf)
-        where = 'prediction="%s" and %s' % (const.ABNORMAL,
-                                            self.aa_conf.alert_filter)
+        db = Sqlite3Helper(self.db_conf)
+
+        where = 'prediction="%s"' % (const.ABNORMAL)
+        if not self.aa_conf['sql_filter'] == 'all':
+            where += ' and %s' % self.aa_conf['sql_filter']
+
         fields = db.select(where)
 
         contents = ''
@@ -55,10 +50,17 @@ class AnomalyAlert:
 
         message += '\n\n'
         message += 'The following hosts and servides are currently monitored:\n\n'
-        for ii, name in enumerate(self.conf.get_base_names()): 
-            message += '* %s\n' % name
 
-            for service in self.conf.base_confs[ii].services:
+        clusters = []
+
+        for cluster in self.conf.sections():
+            if 'cluster/' in cluster:
+                clusters.append(cluster)
+
+        for name in clusters: 
+            message += '* %s\n' % self.conf[name]['name']
+
+            for service in self.conf[name]['services'].split(','):
                 message += ' - %s\n' % service
 
 

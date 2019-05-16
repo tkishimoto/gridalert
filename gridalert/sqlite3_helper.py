@@ -4,45 +4,39 @@ logger = getLogger(__name__)
 
 import sqlite3
 
-from .util import match as util_match
 from .const import Const as const
 
 class Sqlite3Helper:
 
-    def __init__(self, conf, index=const.INVALID):
-        self.conf = conf
-        self.db_conf = conf.db_conf
-        self.index = index 
+    def __init__(self, db_conf):
 
-        if not index == const.INVALID:
-            self.base_conf = conf.base_confs[index]
+        self.table_name = const.DB_TABLE_NAME
+        self.column_names = const.DB_COLUMN_NAMES
+        self.column_types = const.DB_COLUMN_TYPES
 
-        self.conn = sqlite3.connect(self.db_conf.path)
+        self.conn = sqlite3.connect(db_conf['path'])
         self.conn.row_factory = sqlite3.Row
         self.cur = self.conn.cursor()
 
 
     def create_table(self):
-        db_conf = self.db_conf
-
         create = []
 
-        for ii, name in enumerate(db_conf.column_names):
-            create.append('%s %s' % (name, db_conf.column_types[ii]))
+        for ii, name in enumerate(self.column_names):
+            create.append('%s %s' % (name, self.column_types[ii]))
 
         create = ','.join(create)
 
-        create = 'create table if not exists %s (%s)' % (db_conf.table_name, 
+        create = 'create table if not exists %s (%s)' % (self.table_name, 
                                                          create)
         self.cur.execute(create)
         self.conn.commit()
 
 
     def insert_many(self, data):
-        db_conf = self.db_conf
-        questions = ','.join(['?' for ii in db_conf.column_names])
-        insert = '%s' % ','.join(db_conf.column_names)
-        insert = 'insert or ignore into %s (%s) values (%s)' % (db_conf.table_name,
+        questions = ','.join(['?' for ii in self.column_names])
+        insert = '%s' % ','.join(self.column_names)
+        insert = 'insert or ignore into %s (%s) values (%s)' % (self.table_name,
                                                       insert,
                                                       questions)
         self.cur.executemany(insert, data)
@@ -50,9 +44,8 @@ class Sqlite3Helper:
 
 
     def select(self, where=''):
-        db_conf = self.db_conf
-        select = ','.join(db_conf.column_names)
-        select = 'select %s from %s ' % (select, db_conf.table_name)
+        select = ','.join(self.column_names)
+        select = 'select %s from %s ' % (select, self.table_name)
 
         if where:
             select += 'where %s' % where
@@ -60,30 +53,16 @@ class Sqlite3Helper:
         select += ' order by tag'
 
         self.cur.execute(select)
-        results = self.cur.fetchall()
-
-        if self.index == const.INVALID:
-            return results
-
-        else:
-            base_conf = self.base_conf
-
-            results_match = []
-            for result in results:
-                if util_match.base_match(base_conf, 
-                                         result['host'], 
-                                         result['date']):
-                    results_match.append(result)
-
-            return results_match
+        return self.cur.fetchall()
 
 
     def update(self, update, where):
-        update = 'update %s set %s where %s' % (self.db_conf.table_name, 
+        update = 'update %s set %s where %s' % (self.table_name, 
                                                 update, 
                                                 where)
         self.cur.execute(update)
         self.conn.commit()
+
 
     def close(self):
         self.conn.commit()

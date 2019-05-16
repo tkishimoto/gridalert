@@ -7,7 +7,7 @@ from ..util import text as util_text
 
 class LogwatchTemplate:
 
-    def __init__(self, conf, index):
+    def __init__(self, cl_conf):
 
         self.metadata_keys = [] # [[start, end]]
         self.metadata_keys.append(['Logfiles for Host:', '\n'])
@@ -24,12 +24,11 @@ class LogwatchTemplate:
         self.service_keys = [] # [[start, end]]
         self.service_names = [] 
 
-        self.conf = conf
-        self.base_conf = conf.base_confs[index]
+        self.cl_conf = cl_conf
 
 
     def initialize(self):
-        for service in self.base_conf.services:                  
+        for service in self.cl_conf['services'].split(','):                  
  
             if (service == 'cron'): 
                 self.service_keys.append(['- Cron Begin -', 
@@ -113,9 +112,9 @@ class LogwatchTemplate:
                 data = 'unknown'
 
             # tag, cluster, host, date, service, metadata, data, label
-            tag      = '%s_%s_%s_%s' % (self.base_conf.name, meta['host'], 
+            tag      = '%s_%s_%s_%s' % (self.cl_conf['name'], meta['host'], 
                                         self.service_names[ii], int(unix))
-            cluster  = self.base_conf.name
+            cluster  = self.cl_conf['name']
             host     = meta['host']
             date     = meta['date']
             service  = self.service_names[ii]

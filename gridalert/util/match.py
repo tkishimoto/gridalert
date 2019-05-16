@@ -12,11 +12,11 @@ def re_list(target, patterns):
     return match
 
 
-def base_match(conf, host, date):
-    match1 = re_list(host, conf.hosts)
+def base_match(cl_conf, host, date):
+    match1 = re_list(host, cl_conf['hosts'].split(','))
     match2 = util_date.in_sqdate('%s' % date,
-                                 conf.date_start,
-                                 conf.date_end)
+                                 cl_conf['date_start'],
+                                 cl_conf['date_end'])
 
     return match1 and match2
  

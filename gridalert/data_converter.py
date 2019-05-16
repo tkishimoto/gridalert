@@ -13,45 +13,33 @@ from .util import date as util_date
 
 class DataConverter:
 
-    def __init__(self, conf, index):
+    def __init__(self, conf, cluster):
 
         self.conf      = conf
-        self.index     = index
-        self.db_conf   = conf.db_conf
-        self.base_conf = conf.base_confs[index]
-        self.dc_conf   = conf.dc_confs[index]
+        self.cluster   = cluster
 
-
-    def initialize(self):
-
-        work_dir = self.conf.work_dir
-
-        if not self.db_conf.path:
-            self.db_conf.path = work_dir + '/database.db'
+        self.db_conf = conf['db']
+        self.cl_conf = conf[cluster]
 
 
     def text_to_db(self):
 
-        if self.db_conf.type == 'sqlite3':
+        if self.db_conf['type'] == 'sqlite3':
             self.text_to_sqlite3()
 
         else:
-            logger.info('%s not supported' % (self.dc_conf.db_type))
+            logger.info('%s not supported' % (self.db_conf['d']))
  
 
     def text_to_sqlite3(self): 
-        dc_conf = self.dc_conf
-        db_conf = self.db_conf
-        base_conf = self.base_conf
 
-        class_name = dc_conf.text_type.capitalize() + 'Template'
-        template = globals()[class_name](self.conf, self.index)
+        class_name = self.cl_conf['text_type'].capitalize() + 'Template'
+        template = globals()[class_name](self.cl_conf)
         template.initialize()
 
-        texts = glob.glob(dc_conf.text_path)
-        exists = os.path.exists(db_conf.path)
+        texts = glob.glob(self.cl_conf['text_path'])
 
-        db = Sqlite3Helper(self.conf, self.index) 
+        db = Sqlite3Helper(self.db_conf) 
         db.create_table()
 
         buffers = []
@@ -63,9 +51,9 @@ class DataConverter:
 
             for buffer in template.execute(lines):
 
-                if util_match.base_match(base_conf, 
-                    buffer[db_conf.get_data_index("host")], 
-                    buffer[db_conf.get_data_index("date")]):
+                if util_match.base_match(self.cl_conf, 
+                    buffer[const.DB_COLUMN_NAMES.index('host')], 
+                    buffer[const.DB_COLUMN_NAMES.index('date')]):
         
                     # prediction, feature, diff
                     buffer = buffer + ['unkonwn', 'unkonwn', 'unkonwn']

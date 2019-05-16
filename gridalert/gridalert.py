@@ -1,6 +1,7 @@
 from logging import getLogger
-
 logger = getLogger(__name__)
+
+import configparser
 
 from .data_converter import *
 from .text_vectorizer import *
@@ -12,50 +13,47 @@ class GridAlert:
 
     def __init__(self, conf):
 
+        self.clusters = []
+
+        for cluster in conf.sections():
+            if 'cluster/' in cluster:
+                self.clusters.append(cluster)
+
         self.conf = conf
 
 
     def text_to_db(self):
-        names = self.conf.get_base_names()
 
-        for ii, name in enumerate(names):
-            dc = DataConverter(self.conf, ii)
-            dc.initialize()
+        for cluster in self.clusters:
+            dc = DataConverter(self.conf, cluster)
             dc.text_to_db()
 
 
     def vectorize(self):
-        names = self.conf.get_base_names()
 
-        for ii, name in enumerate(names):
-            tv = TextVectorizer(self.conf, ii)
-            tv.initialize()
+        for cluster in self.clusters:
+            tv = TextVectorizer(self.conf, cluster)
             tv.vectorize()
-    
-
+   
+ 
     def clustering(self):
-        names = self.conf.get_base_names()
 
-        for ii, name in enumerate(names):
-            vc = VectorCluster(self.conf, ii)
-            vc.initialize()
+        for cluster in self.clusters:
+            vc = VectorCluster(self.conf, cluster)
             vc.clustering()
-    
-
+  
+ 
     def visualize(self):
-        names = self.conf.get_base_names()
 
-        for ii, name in enumerate(names):
-            dv = DataVisualizer(self.conf, ii)
-            dv.initialize()
+        for cluster in self.clusters:
+            dv = DataVisualizer(self.conf, cluster)
             dv.visualize()
 
-        dv = DataVisualizer(self.conf, 0)
-        dv.initialize()
+        dv = DataVisualizer(self.conf)
         dv.make_top_html()
 
 
     def alert(self):
         aa = AnomalyAlert(self.conf)
-        aa.initialize()
         aa.send_mail()
+
