@@ -1,13 +1,15 @@
-def header(html):
-    html.write('<!DOCTYPE html>\n')
-    html.write('<html>\n')
-    html.write('<head>\n')
-    html.write('<title>gridalert monitor</title>\n')
-    html.write('<meta charset="UTF-8">\n')
-    html.write('</head>\n')
-    html.write('<body>\n')
+def header():
+    html  = '<html>'
+    html += '<head>'
+    html += '<title>gridalert monitor</title>'
+    html += '<meta charset="UTF-8">'
+    html += '</head>'
+    html += '<body>'
 
-def footer(html):
-    html.write('</body>\n')
-    html.write('</html>\n')
+    return html
 
+def footer(): 
+    html  = '</body>'
+    html += '</html>'
+
+    return html

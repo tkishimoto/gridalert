@@ -1,13 +1,16 @@
 from logging import getLogger
 logger = getLogger(__name__)
 
+import cherrypy
 import configparser
 from pathlib import Path
 
 from .data_converter import *
 from .text_vectorizer import *
 from .vector_cluster import *
+from .plot_helper import *
 from .data_visualizer import *
+from .html_helper import *
 from .anomaly_alert import *
 
 class GridAlert:
@@ -53,15 +56,33 @@ class GridAlert:
         for cluster in self.clusters:
             vc = VectorCluster(self.conf, cluster)
             vc.clustering()
-  
- 
-    def visualize(self):
-        for cluster in self.clusters:
-            dv = DataVisualizer(self.conf, cluster)
-            dv.visualize()
 
+ 
+    def plot(self):
+        for cluster in self.clusters:
+            ph = PlotHelper(self.conf, cluster)
+            ph.plot()
+
+ 
+    def html(self):
+        hh = HtmlHelper(self.conf)
+        hh.make_html(self.conf)
+
+
+    def visualize(self):
+        conf = {
+            '/': {
+                'tools.sessions.on': True,
+                'tools.staticdir.root': Path.cwd()
+            },
+            '/static': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': self.conf['DEFAULT']['base_dir']
+            }
+        }
+ 
         dv = DataVisualizer(self.conf)
-        dv.make_top_html()
+        cherrypy.quickstart(dv, '/', conf)
 
 
     def alert(self):

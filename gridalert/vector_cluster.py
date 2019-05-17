@@ -4,6 +4,7 @@ logger = getLogger(__name__)
 
 import math
 import pickle
+import difflib
 import numpy as np
 
 from gensim.models.doc2vec import Doc2Vec
@@ -47,6 +48,9 @@ class VectorCluster:
                     logger.info('%s not supported' % (self.cl_conf['cluster_type']))
             else:
                 logger.info('%s not supported' % (self.cl_conf['vector_type']))
+
+            if self.cl_conf['use_diff'] == 'True':
+                self.diff_anomaly()
 
 
     def doc2vec_to_isolationforest(self):
@@ -108,4 +112,39 @@ class VectorCluster:
 
             db.update(update, where)
 
+
+    def diff_anomaly(self):
+        db = Sqlite3Helper(self.db_conf)
+        fields = db.select(where='service="%s"' % self.service)
+
+        center = {}
+        distance = const.INVALID
+
+        for field in fields:
+            feature = field['feature']
+
+            data = {}
+            for index in feature.split(','):
+                data[index.split('=')[0]] = index.split('=')[1]
+
+            if float(data['distance']) < distance:
+                distance = float(data['distance'])
+                center = field
+
+        for field in fields:
+            diff = difflib.unified_diff(center['data'].splitlines(),
+              field['data'].splitlines(),
+              'normal event',
+              'anomaly event',
+              '%s %s %s' % (center['host'],
+                            self.service,
+                            center['date']),
+              '%s %s %s' % (field['host'],
+                            self.service,
+                            field['date']))
+
+            update = 'diff="%s"' % ('\n'.join(diff))
+            where = 'tag="%s"' % field['tag']
+
+            db.update(update, where)
 

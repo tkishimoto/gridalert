@@ -4,6 +4,7 @@ logger = getLogger(__name__)
 
 from ..util import date as util_date
 from ..util import text as util_text
+from ..util import hash as util_hash
 
 class LogwatchTemplate:
 
@@ -112,14 +113,13 @@ class LogwatchTemplate:
                 data = 'unknown'
 
             # tag, cluster, host, date, service, metadata, data, label
-            tag      = '%s_%s_%s_%s' % (self.cl_conf['name'], meta['host'], 
-                                        self.service_names[ii], int(unix))
             cluster  = self.cl_conf['name']
             host     = meta['host']
             date     = meta['date']
             service  = self.service_names[ii]
             metadata = 'range=%s,level=%s' % (meta['range'], meta['level'])
             label    = '1'
+            tag      = util_hash.md5(cluster, host, str(date), data)
 
             buffers.append([tag, cluster, host, date, service, 
                             metadata, data, label])

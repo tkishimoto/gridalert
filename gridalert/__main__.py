@@ -20,9 +20,17 @@ def command_cluster(args):
     ga = GridAlert(args.conf)
     ga.clustering()
 
-def command_html(args):
+def command_plot(args):
+    ga = GridAlert(args.conf)
+    ga.plot()
+
+def command_cherrypy(args):
     ga = GridAlert(args.conf)
     ga.visualize()
+
+def command_html(args):
+    ga = GridAlert(args.conf)
+    ga.html()
 
 def command_alert(args):
     ga = GridAlert(args.conf)
@@ -32,8 +40,8 @@ def command_all(args):
     ga = GridAlert(args.conf)
     ga.text_to_db()
     ga.vectorize()
-    ga.cluster()
-    ga.visualize()
+    ga.clustering()
+    ga.plot()
     ga.alert()
 
 
@@ -65,6 +73,22 @@ def main():
                              default='')
     parser_cluster.set_defaults(handler=command_cluster) 
 
+    # plot
+    parser_plot = subparsers.add_parser('plot')
+    parser_plot.add_argument('-c', '--conf', 
+                             action='store', 
+                             dest='conf', 
+                             default='')
+    parser_plot.set_defaults(handler=command_plot) 
+ 
+    # cherrypy
+    parser_cherrypy = subparsers.add_parser('cherrypy')
+    parser_cherrypy.add_argument('-c', '--conf', 
+                             action='store', 
+                             dest='conf', 
+                             default='')
+    parser_cherrypy.set_defaults(handler=command_cherrypy) 
+
     # html
     parser_html = subparsers.add_parser('html')
     parser_html.add_argument('-c', '--conf', 
@@ -72,7 +96,7 @@ def main():
                              dest='conf', 
                              default='')
     parser_html.set_defaults(handler=command_html) 
-
+ 
     # alert
     parser_alert = subparsers.add_parser('alert')
     parser_alert.add_argument('-c', '--conf', 
@@ -81,7 +105,7 @@ def main():
                              default='')
     parser_alert.set_defaults(handler=command_alert) 
 
-    # alert
+    # all
     parser_all = subparsers.add_parser('all')
     parser_all.add_argument('-c', '--conf', 
                              action='store', 
