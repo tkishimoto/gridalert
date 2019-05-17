@@ -1,7 +1,7 @@
 gridalert
 ====
 
-gridalert detects, alerts acd visualize anomaly logs using Machine Learning techniques for (Grid) compuring site operation.
+gridalert provide methods to detect, alert acd visualize anomaly logs using Machine Learning techniques for (Grid) compuring site operation.
 
 ## Installation
 
