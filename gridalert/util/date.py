@@ -11,12 +11,20 @@ def sqdate_to_unix(date):
     # e.g. YYYY-MM-DD HH:MM:SS
     return  time.mktime(datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S").timetuple())
 
+def sysdate_to_unix(date):
+    # e.g. May 13 03:10:01 2019
+    return  time.mktime(datetime.datetime.strptime(date, "%b %d %H:%M:%S %Y").timetuple())
+
 def unix_to_sqdate(unix):
     # e.g. YYYY-MM-DD HH:MM:SS
     return  datetime.datetime.fromtimestamp(unix)
 
 def endate_to_sqdate(date):
     unix = endate_to_unix(date)
+    return unix_to_sqdate(unix)
+
+def sysdate_to_sqdate(date):
+    unix = sysdate_to_unix(date)
     return unix_to_sqdate(unix)
 
 def in_sqdate(date, start, end):
