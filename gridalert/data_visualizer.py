@@ -227,7 +227,9 @@ class DataVisualizer:
          
     def make_top_html(self):
 
-        html = open(self.conf['DEFAULT']['html_dir'] + '/gridalert.top.html', 'w')
+        top_path = self.conf['DEFAULT']['html_dir'] + '/gridalert.top.html'
+
+        html = open(top_path, 'w')
         util_html.header(html)
         html.write('<h4>gridalert top page</h4>\n')
         html.write('<ul>\n')
@@ -243,3 +245,6 @@ class DataVisualizer:
         html.write('</ul>\n')
         util_html.footer(html)
         html.close()
+
+        logger.info('please open: %s' % (top_path))
+

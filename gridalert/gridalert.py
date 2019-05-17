@@ -32,6 +32,8 @@ class GridAlert:
 
         default.set('DEFAULT', 'clusters', ','.join(self.clusters)) 
 
+        logger.info('clusters: %s is defined' % self.clusters) 
+
         self.conf = default
 
 
