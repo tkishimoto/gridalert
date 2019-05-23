@@ -36,8 +36,8 @@ class DataConverter:
         template = globals()[class_name](self.cl_conf)
         template.initialize()
 
-        texts = glob.glob(self.cl_conf['text_path'])
-        logger.info('input texts: %s' % (self.cl_conf['text_path']))
+        texts = glob.glob(self.cl_conf['text_input'])
+        logger.info('input texts: %s' % (self.cl_conf['text_input']))
         logger.info('# of text samples: %s' % (len(texts)))
 
         db = Sqlite3Helper(self.db_conf) 

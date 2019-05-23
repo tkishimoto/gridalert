@@ -4,6 +4,7 @@ logger = getLogger(__name__)
 
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.doc2vec import TaggedDocument
+from fastText import train_unsupervised
 
 from .sqlite3_helper import *
 
@@ -32,9 +33,15 @@ class TextVectorizer:
                                          self.service)
             self.model_path = self.cl_conf['model_dir'] + '/' + model
 
+            text = '%s.%s.txt' % (self.cl_conf['name'],
+                                         self.service)
+            self.text_path = self.cl_conf['model_dir'] + '/' + text
+
             if self.db_conf['type'] == 'sqlite3':
                 if self.cl_conf['vector_type'] == 'doc2vec':
                     self.sqlite3_to_doc2vec()
+                elif self.cl_conf['vector_type'] == 'fasttext':
+                    self.sqlite3_to_fasttext()
                 else:
                     logger.info('%s not supported' % (self.cl_conf['vector_type']))
             else:
@@ -72,4 +79,40 @@ class TextVectorizer:
                         seed = int(cl_conf['vector_seed'])) 
 
         model.save(self.model_path)
+
+
+    def sqlite3_to_fasttext(self):
+
+        db = Sqlite3Helper(self.db_conf)
+        fields = db.select(where='service="%s"' % self.service)
+
+        if (len(fields) <= 0):
+            logger.info('no trainig data')
+            return
+
+        logger.info('total samples : %s' % (len(fields)))
+
+        trainings = open(self.text_path + '.tmp', 'w')
+        outputs = open(self.text_path, 'w')
+
+        for counter, docs in enumerate(fields):
+
+            data = docs['data']
+            data = util_text.filter_doc(data)
+
+            trainings.write('%s\n' % data)
+            outputs.write('%s,%s\n' % (docs['tag'], data))
+
+        trainings.close()
+        outputs.close()
+
+        cl_conf = self.cl_conf
+        model = train_unsupervised(self.text_path + '.tmp',
+                        dim = int(cl_conf['vector_size']),
+                        ws = int(cl_conf['vector_window']),
+                        epoch = int(cl_conf['vector_epochs']),
+                        minCount = int(cl_conf['vector_min_count']),
+                        thread = int(cl_conf['vector_workers']))
+
+        model.save_model(self.model_path)
 

@@ -25,6 +25,7 @@ class VectorCluster:
         self.cl_conf    = conf[cluster]
 
         self.service    = ''
+        self.text_path  = ''
         self.model_vec_path = ''
         self.model_cls_path = ''
 
@@ -35,6 +36,9 @@ class VectorCluster:
             self.service = service
             prefix = '%s.%s' % (self.cl_conf['name'], service)
 
+            text = '%s.txt' % (prefix)
+            self.text_path = self.cl_conf['model_dir'] + '/' + text
+
             model = '%s.vec.model' % (prefix)
             self.model_vec_path = self.cl_conf['model_dir'] + '/' + model
 
@@ -44,6 +48,12 @@ class VectorCluster:
             if self.cl_conf['vector_type'] == 'doc2vec':
                 if self.cl_conf['cluster_type'] == 'isolationforest':
                     self.doc2vec_to_isolationforest()
+                else:
+                    logger.info('%s not supported' % (self.cl_conf['cluster_type']))
+
+            elif self.cl_conf['vector_type'] == 'fasttext':
+                if self.cl_conf['cluster_type'] == 'isolationforest':
+                    self.fasttext_to_isolationforest()
                 else:
                     logger.info('%s not supported' % (self.cl_conf['cluster_type']))
             else:
@@ -70,6 +80,13 @@ class VectorCluster:
         self.dump_to_db(tags, pred_data, data)          
  
         pickle.dump(model, open(self.model_cls_path, 'wb'))
+
+
+    def fasttext_to_isolationforest(self):
+ 
+        data, tags = util_reader.get_data_from_fasttext(self.text_path,
+                                                        self.model_vec_path)
+        data = np.array(data)
 
 
     def dump_to_db(self, tags, pred_data, data):
