@@ -78,6 +78,9 @@ class GridAlert:
             '/static': {
                 'tools.staticdir.on': True,
                 'tools.staticdir.dir': self.conf['DEFAULT']['base_dir']
+            },
+            'global': {
+                'server.socket_host':'0.0.0.0'
             }
         }
  
