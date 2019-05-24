@@ -53,6 +53,7 @@ class DataConverter:
             for buffer in template.execute(lines):
 
                 if util_match.base_match(self.cl_conf, 
+                    buffer[const.DB_COLUMN_NAMES.index('cluster')], 
                     buffer[const.DB_COLUMN_NAMES.index('host')], 
                     buffer[const.DB_COLUMN_NAMES.index('date')]):
         

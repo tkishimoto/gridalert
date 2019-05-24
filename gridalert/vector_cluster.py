@@ -77,6 +77,7 @@ class VectorCluster:
 
     def cluster_isolationforest(self, data, tags):
         data = np.array(data)
+
         cl_conf = self.cl_conf
         model = IsolationForest(behaviour=cl_conf['cluster_behaviour'],
                                 n_estimators=int(cl_conf['cluster_n_estimators']),
@@ -97,10 +98,12 @@ class VectorCluster:
 
         labels = []
         means  = []
-
         for ii, pred in enumerate(pred_data):
             if pred == const.NORMAL:
                 means.append(data[ii]) 
+
+        if len(means) == 0:
+            means.append([0]*len(data[0]))
 
         means = np.mean(np.array(means), axis=0)
 

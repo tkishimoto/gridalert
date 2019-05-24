@@ -61,6 +61,7 @@ class Sqlite3Helper:
 
             for result in results:
                 if util_match.base_match(base_match,
+                                         result['cluster'],
                                          result['host'],
                                          result['date']):
                     results_match.append(result)

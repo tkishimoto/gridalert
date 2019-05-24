@@ -42,12 +42,12 @@ class DataVisualizer:
 
     @cherrypy.expose
     def service(self, cluster, service):
-        db   = Sqlite3Helper(self.db_conf)
-        where = 'service="%s" and prediction=="-1"' % service
-        fields = db.select(where=where)
 
         cl_conf = self.conf[cluster]
-        
+        db   = Sqlite3Helper(self.db_conf)
+        where = 'service="%s" and prediction=="-1"' % service
+        fields = db.select(where=where, base_match=cl_conf)
+
         prefix = '%s.%s' % (cl_conf['name'], service)
         plot = '%s.svg' % (prefix)
 
