@@ -26,6 +26,8 @@ All commands of the gridalert require a configuration file (e.g. conf.ini) for t
 * alert: alert anomaly events (under development).
 * all: do text, vector, cluster, plot, alert.
 
+Please see gridalert/__main__.py if you want to use gridalert module directly.
+
 ## Configuration 
 The following is an example of the configuration file. [cluster/xxxx] need to be defined to run the gridalert.
 
