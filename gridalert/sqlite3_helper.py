@@ -4,6 +4,7 @@ logger = getLogger(__name__)
 
 import sqlite3
 
+from .util import match as util_match
 from .const import Const as const
 
 class Sqlite3Helper:
@@ -43,7 +44,7 @@ class Sqlite3Helper:
         self.conn.commit()
 
 
-    def select(self, where=''):
+    def select(self, where='', base_match=''):
         select = ','.join(self.column_names)
         select = 'select %s from %s ' % (select, self.table_name)
 
@@ -53,7 +54,20 @@ class Sqlite3Helper:
         select += ' order by tag'
 
         self.cur.execute(select)
-        return self.cur.fetchall()
+        results = self.cur.fetchall()
+
+        if base_match:
+            results_match = []
+
+            for result in results:
+                if util_match.base_match(base_match,
+                                         result['host'],
+                                         result['date']):
+                    results_match.append(result)
+            return results_match
+
+        else:
+            return results
 
 
     def update(self, update, where):

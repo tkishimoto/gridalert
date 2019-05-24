@@ -25,7 +25,6 @@ class VectorCluster:
         self.cl_conf    = conf[cluster]
 
         self.service    = ''
-        self.text_path  = ''
         self.model_vec_path = ''
         self.model_cls_path = ''
 
@@ -35,9 +34,6 @@ class VectorCluster:
         for service in self.cl_conf['services'].split(','):
             self.service = service
             prefix = '%s.%s' % (self.cl_conf['name'], service)
-
-            text = '%s.txt' % (prefix)
-            self.text_path = self.cl_conf['model_dir'] + '/' + text
 
             model = '%s.vec.model' % (prefix)
             self.model_vec_path = self.cl_conf['model_dir'] + '/' + model
@@ -66,8 +62,21 @@ class VectorCluster:
     def doc2vec_to_isolationforest(self):
  
         data, tags = util_reader.get_data_from_doc2vec(self.model_vec_path)
-        data = np.array(data)
+        self.cluster_isolationforest(data, tags) 
       
+
+    def fasttext_to_isolationforest(self):
+        db = Sqlite3Helper(self.db_conf)
+        data, tags = util_reader.get_data_from_sqlite3(db,
+                                                      'service="%s"' % self.service,
+                                                       self.cl_conf)
+ 
+        data = util_reader.get_data_from_fasttext(self.model_vec_path, data)
+        self.cluster_isolationforest(data, tags) 
+
+
+    def cluster_isolationforest(self, data, tags):
+        data = np.array(data)
         cl_conf = self.cl_conf
         model = IsolationForest(behaviour=cl_conf['cluster_behaviour'],
                                 n_estimators=int(cl_conf['cluster_n_estimators']),
@@ -80,13 +89,6 @@ class VectorCluster:
         self.dump_to_db(tags, pred_data, data)          
  
         pickle.dump(model, open(self.model_cls_path, 'wb'))
-
-
-    def fasttext_to_isolationforest(self):
- 
-        data, tags = util_reader.get_data_from_fasttext(self.text_path,
-                                                        self.model_vec_path)
-        data = np.array(data)
 
 
     def dump_to_db(self, tags, pred_data, data):

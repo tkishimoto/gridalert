@@ -9,6 +9,7 @@ from fastText import train_unsupervised
 from .sqlite3_helper import *
 
 from .util import text as util_text
+from .util import reader as util_reader
 
 
 class TextVectorizer:
@@ -33,10 +34,6 @@ class TextVectorizer:
                                          self.service)
             self.model_path = self.cl_conf['model_dir'] + '/' + model
 
-            text = '%s.%s.txt' % (self.cl_conf['name'],
-                                         self.service)
-            self.text_path = self.cl_conf['model_dir'] + '/' + text
-
             if self.db_conf['type'] == 'sqlite3':
                 if self.cl_conf['vector_type'] == 'doc2vec':
                     self.sqlite3_to_doc2vec()
@@ -51,22 +48,17 @@ class TextVectorizer:
     def sqlite3_to_doc2vec(self):
 
         db = Sqlite3Helper(self.db_conf) 
-        fields = db.select(where='service="%s"' % self.service)
-
-        if (len(fields) <= 0):
-            logger.info('no trainig data')
-            return 
-
-        logger.info('total samples : %s' % (len(fields)))
+        data, tags = util_reader.get_data_from_sqlite3(db, 
+                                                      'service="%s"' % self.service,
+                                                       self.cl_conf)
 
         trainings = []       
-        for counter, docs in enumerate(fields):
+        for doc, tag in zip(data, tags):
 
-            data = docs['data']
-            data = util_text.filter_doc(data)
+            doc = util_text.filter_doc(doc)
 
-            trainings.append(TaggedDocument(words=data.split(), 
-                             tags=[docs['tag']]))
+            trainings.append(TaggedDocument(words=doc.split(), 
+                             tags=[tag]))
         
         cl_conf = self.cl_conf
         model = Doc2Vec(documents = trainings, 
@@ -83,31 +75,25 @@ class TextVectorizer:
 
     def sqlite3_to_fasttext(self):
 
-        db = Sqlite3Helper(self.db_conf)
-        fields = db.select(where='service="%s"' % self.service)
+        db = Sqlite3Helper(self.db_conf) 
+        data, tags = util_reader.get_data_from_sqlite3(db, 
+                                                       'service="%s"' % self.service,
+                                                       self.cl_conf)
 
-        if (len(fields) <= 0):
-            logger.info('no trainig data')
-            return
+        text_path = self.cl_conf['model_dir'] + '/fasttext.tmp'
 
-        logger.info('total samples : %s' % (len(fields)))
+        trainings = open(text_path, 'w')
 
-        trainings = open(self.text_path + '.tmp', 'w')
-        outputs = open(self.text_path, 'w')
+        for doc, tag in zip(data, tags):
 
-        for counter, docs in enumerate(fields):
+            doc = util_text.filter_doc(doc)
 
-            data = docs['data']
-            data = util_text.filter_doc(data)
-
-            trainings.write('%s\n' % data)
-            outputs.write('%s,%s\n' % (docs['tag'], data))
+            trainings.write('%s\n' % doc)
 
         trainings.close()
-        outputs.close()
 
         cl_conf = self.cl_conf
-        model = train_unsupervised(self.text_path + '.tmp',
+        model = train_unsupervised(text_path,
                         dim = int(cl_conf['vector_size']),
                         ws = int(cl_conf['vector_window']),
                         epoch = int(cl_conf['vector_epochs']),

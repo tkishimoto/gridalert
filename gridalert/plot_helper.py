@@ -10,6 +10,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+from .sqlite3_helper import *
 from .util import reader as util_reader
 from .const import Const as const
 
@@ -52,6 +53,12 @@ class PlotHelper:
                     self.plot_doc2vec_isolationforest()
                 else:
                     logger.info('%s not supported' % (self.cl_conf['cluster_type']))
+
+            elif self.cl_conf['vector_type'] == 'fasttext':
+                if self.cl_conf['cluster_type'] == 'isolationforest':
+                    self.plot_fasttext_isolationforest()
+                else:
+                    logger.info('%s not supported' % (self.cl_conf['cluster_type']))
             else:
                 logger.info('%s not supported' % (self.cl_conf['vector_type']))
 
@@ -59,6 +66,20 @@ class PlotHelper:
     def plot_doc2vec_isolationforest(self):
 
         data, tags = util_reader.get_data_from_doc2vec(self.model_vec_path)
+
+        cluster_model = pickle.load(open(self.model_cls_path, 'rb'))
+        pred_data = cluster_model.predict(data)
+
+        self.plot_clustering(data, tags, pred_data)
+
+
+    def plot_fasttext_isolationforest(self):
+        db = Sqlite3Helper(self.db_conf)
+        data, tags = util_reader.get_data_from_sqlite3(db,
+                                                      'service="%s"' % self.service,
+                                                       self.cl_conf)
+
+        data = util_reader.get_data_from_fasttext(self.model_vec_path, data)
 
         cluster_model = pickle.load(open(self.model_cls_path, 'rb'))
         pred_data = cluster_model.predict(data)
@@ -85,11 +106,11 @@ class PlotHelper:
                     if pred == const.NORMAL:
                         xx1.append(data[ii][ix])
                         yy1.append(data[ii][iy])
-                        tag1.append('http://127.0.0.1:8080/log?tag=%s' % tags[ii])
+                        tag1.append('http://localhost:8080/log?tag=%s' % tags[ii])
                     else:
                         xx2.append(data[ii][ix])
                         yy2.append(data[ii][iy])
-                        tag2.append('http://127.0.0.1:8080/log?tag=%s' % tags[ii])
+                        tag2.append('http://localhost:8080/log?tag=%s' % tags[ii])
 
                 if (ix == iy):
                     axes[iy][ix].hist([xx1, xx2], 
