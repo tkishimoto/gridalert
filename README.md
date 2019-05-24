@@ -42,7 +42,7 @@ The following is an example of the configuration file. [cluster/xxxx] need to be
     # Clusters config
     [cluster/lcg-fs_fasttext_isolationforest]
     name = lcg-fs_fasttext_isolationforest
-    hosts = lcg-fs1*
+    hosts = lcg-fs1.*
     services = cron,sshd
     text_input = /root/mnt/logwatch/*
     vector_type = fasttext
