@@ -10,6 +10,7 @@ from .sqlite3_helper import *
 
 from .util import text as util_text
 from .util import reader as util_reader
+from .util import path as util_path
 
 
 class TextVectorizer:
@@ -25,24 +26,22 @@ class TextVectorizer:
         self.service    = ''
         self.model_path = ''
 
+
     def vectorize(self):
 
         for service in self.cl_conf['services'].split(','):
             self.service = service
+            self.model_path = util_path.model_vec_path(self.cl_conf, service)
 
-            model = '%s.%s.vec.model' % (self.cl_conf['name'],
-                                         self.service)
-            self.model_path = self.cl_conf['model_dir'] + '/' + model
+            db_type = self.db_conf['type']
+            vector_type = self.cl_conf['vector_type']
 
-            if self.db_conf['type'] == 'sqlite3':
-                if self.cl_conf['vector_type'] == 'doc2vec':
-                    self.sqlite3_to_doc2vec()
-                elif self.cl_conf['vector_type'] == 'fasttext':
-                    self.sqlite3_to_fasttext()
-                else:
-                    logger.info('%s not supported' % (self.cl_conf['vector_type']))
+            func = getattr(self, "%s_to_%s" % (db_type, vector_type), None)
+            if func is not None:
+                func()
+
             else:
-                logger.info('%s not supported' % (self.db_conf['type']))
+                logger.info('%s to %s not supported' % (db_type, vector_type))
 
 
     def sqlite3_to_doc2vec(self):

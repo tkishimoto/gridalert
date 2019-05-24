@@ -9,9 +9,11 @@ import numpy as np
 
 from gensim.models.doc2vec import Doc2Vec
 from sklearn.ensemble import IsolationForest
+from sklearn.cluster import DBSCAN
 
 from .sqlite3_helper import *
 from .util import reader as util_reader
+from .util import path as util_path
 from .const import Const as const
 
 class VectorCluster:
@@ -33,27 +35,19 @@ class VectorCluster:
 
         for service in self.cl_conf['services'].split(','):
             self.service = service
-            prefix = '%s.%s' % (self.cl_conf['name'], service)
+            self.model_vec_path = util_path.model_vec_path(self.cl_conf, service)
+            self.model_cls_path = util_path.model_cls_path(self.cl_conf, service)
 
-            model = '%s.vec.model' % (prefix)
-            self.model_vec_path = self.cl_conf['model_dir'] + '/' + model
+            vector_type = self.cl_conf['vector_type']
+            cluster_type = self.cl_conf['cluster_type']
 
-            model = '%s.cls.model' % (prefix)
-            self.model_cls_path = self.cl_conf['model_dir'] + '/' + model
+            func = getattr(self, "%s_to_%s" % (vector_type, cluster_type), None)
+            if func is not None:
+                func()
 
-            if self.cl_conf['vector_type'] == 'doc2vec':
-                if self.cl_conf['cluster_type'] == 'isolationforest':
-                    self.doc2vec_to_isolationforest()
-                else:
-                    logger.info('%s not supported' % (self.cl_conf['cluster_type']))
-
-            elif self.cl_conf['vector_type'] == 'fasttext':
-                if self.cl_conf['cluster_type'] == 'isolationforest':
-                    self.fasttext_to_isolationforest()
-                else:
-                    logger.info('%s not supported' % (self.cl_conf['cluster_type']))
             else:
-                logger.info('%s not supported' % (self.cl_conf['vector_type']))
+                logger.info('%s to %s not supported' % (vector_type, cluster_type))
+
 
             if self.cl_conf['use_diff'] == 'True':
                 self.diff_anomaly()
@@ -75,6 +69,22 @@ class VectorCluster:
         self.cluster_isolationforest(data, tags) 
 
 
+    def doc2vec_to_dbscan(self):
+ 
+        data, tags = util_reader.get_data_from_doc2vec(self.model_vec_path)
+        self.cluster_dbscan(data, tags) 
+
+
+    def fasttext_to_dbscan(self): 
+        db = Sqlite3Helper(self.db_conf)
+        data, tags = util_reader.get_data_from_sqlite3(db,
+                                                      'service="%s"' % self.service,
+                                                       self.cl_conf)
+
+        data = util_reader.get_data_from_fasttext(self.model_vec_path, data)
+        self.cluster_dbscan(data, tags) 
+
+
     def cluster_isolationforest(self, data, tags):
         data = np.array(data)
 
@@ -92,6 +102,20 @@ class VectorCluster:
         pickle.dump(model, open(self.model_cls_path, 'wb'))
 
 
+    def cluster_dbscan(self, data, tags):
+        data = np.array(data)
+
+        cl_conf = self.cl_conf
+        model = DBSCAN(eps=float(cl_conf['cluster_eps']),
+                       min_samples=int(cl_conf['cluster_min_samples']))
+        model.fit(data)
+        pred_data = model.labels_
+
+        self.dump_to_db(tags, pred_data, data)          
+ 
+        pickle.dump(model, open(self.model_cls_path, 'wb'))
+
+
     def dump_to_db(self, tags, pred_data, data):
         db = Sqlite3Helper(self.db_conf)
         db.create_table()
@@ -99,7 +123,7 @@ class VectorCluster:
         labels = []
         means  = []
         for ii, pred in enumerate(pred_data):
-            if pred == const.NORMAL:
+            if pred != const.ABNORMAL:
                 means.append(data[ii]) 
 
         if len(means) == 0:
@@ -137,7 +161,8 @@ class VectorCluster:
 
     def diff_anomaly(self):
         db = Sqlite3Helper(self.db_conf)
-        fields = db.select(where='service="%s"' % self.service)
+        fields = db.select(where='service="%s"' % self.service,
+                           base_match=self.cl_conf)
 
         center = {}
         distance = const.INVALID

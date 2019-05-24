@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 
 from .sqlite3_helper import *
 from .util import reader as util_reader
+from .util import path as util_path
 from .const import Const as const
 
 class PlotHelper:
@@ -37,30 +38,19 @@ class PlotHelper:
 
         for service in self.cl_conf['services'].split(','):
             self.service = service
-            prefix = '%s.%s' % (self.cl_conf['name'], service)
+            self.model_vec_path = util_path.model_vec_path(self.cl_conf, service)
+            self.model_cls_path = util_path.model_cls_path(self.cl_conf, service)
+            self.plot_path = util_path.plot_path(self.cl_conf, service)
 
-            model = '%s.vec.model' % (prefix)
-            self.model_vec_path = self.cl_conf['model_dir'] + '/' + model
+            vector_type = self.cl_conf['vector_type']
+            cluster_type = self.cl_conf['cluster_type']
 
-            model = '%s.cls.model' % (prefix)
-            self.model_cls_path = self.cl_conf['model_dir'] + '/' + model
+            func = getattr(self, "plot_%s_%s" % (vector_type, cluster_type), None)
+            if func is not None:
+                func()
 
-            plot = '%s.svg' % (prefix)
-            self.plot_path = self.cl_conf['plot_dir'] + '/' + plot
-
-            if self.cl_conf['vector_type'] == 'doc2vec':
-                if self.cl_conf['cluster_type'] == 'isolationforest':
-                    self.plot_doc2vec_isolationforest()
-                else:
-                    logger.info('%s not supported' % (self.cl_conf['cluster_type']))
-
-            elif self.cl_conf['vector_type'] == 'fasttext':
-                if self.cl_conf['cluster_type'] == 'isolationforest':
-                    self.plot_fasttext_isolationforest()
-                else:
-                    logger.info('%s not supported' % (self.cl_conf['cluster_type']))
             else:
-                logger.info('%s not supported' % (self.cl_conf['vector_type']))
+                logger.info('plot %s %s not supported' % (vector_type, cluster_type))
 
 
     def plot_doc2vec_isolationforest(self):
@@ -87,6 +77,29 @@ class PlotHelper:
         self.plot_clustering(data, tags, pred_data)
 
 
+    def plot_doc2vec_dbscan(self):
+
+        data, tags = util_reader.get_data_from_doc2vec(self.model_vec_path)
+
+        cluster_model = pickle.load(open(self.model_cls_path, 'rb'))
+        pred_data = cluster_model.labels_
+
+        self.plot_clustering(data, tags, pred_data)
+
+
+    def plot_fasttext_dbscan(self):
+        db = Sqlite3Helper(self.db_conf)
+        data, tags = util_reader.get_data_from_sqlite3(db,
+                                                      'service="%s"' % self.service,
+                                                       self.cl_conf)
+
+        data = util_reader.get_data_from_fasttext(self.model_vec_path, data)
+
+        cluster_model = pickle.load(open(self.model_cls_path, 'rb'))
+        pred_data = cluster_model.labels_
+
+        self.plot_clustering(data, tags, pred_data)
+
     def plot_clustering(self, data, tags, pred_data):
         conf = self.conf
 
@@ -103,7 +116,7 @@ class PlotHelper:
                 tag1, tag2 = [], []
 
                 for ii, pred in enumerate(pred_data):
-                    if pred == const.NORMAL:
+                    if pred != const.ABNORMAL:
                         xx1.append(data[ii][ix])
                         yy1.append(data[ii][iy])
                         tag1.append('http://localhost:8080/log?tag=%s' % tags[ii])

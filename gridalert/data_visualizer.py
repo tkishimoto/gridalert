@@ -6,6 +6,7 @@ import cherrypy
 
 from .sqlite3_helper import *
 from .util import html as util_html
+from .util import path as util_path
 
 class DataVisualizer:
 
@@ -48,7 +49,10 @@ class DataVisualizer:
         where = 'service="%s" and prediction=="-1"' % service
         fields = db.select(where=where, base_match=cl_conf)
 
-        prefix = '%s.%s' % (cl_conf['name'], service)
+        prefix = '%s.%s.%s.%s' % (cl_conf['name'], 
+                                  service, 
+                                  cl_conf['vector_type'],
+                                  cl_conf['cluster_type'])
         plot = '%s.svg' % (prefix)
 
         html  = util_html.header()

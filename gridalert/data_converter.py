@@ -23,11 +23,14 @@ class DataConverter:
 
     def text_to_db(self):
 
-        if self.db_conf['type'] == 'sqlite3':
-            self.text_to_sqlite3()
+        db_type = self.db_conf['type'] 
+
+        func = getattr(self, "text_to_%s" % db_type, None)
+        if func is not None:
+            func()
 
         else:
-            logger.info('%s not supported' % (self.db_conf['d']))
+            logger.info('%s not supported' % db_type)
  
 
     def text_to_sqlite3(self): 
