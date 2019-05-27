@@ -1,0 +1,54 @@
+#!/bin/python
+import sys
+lines = sys.stdin.readlines()
+
+services = ['httpd', 'xrootd', 'other']
+messages = {}
+
+for service in services:
+    messages[service] =  {}
+
+for line in lines:
+    process = line.split()[4]
+    level = line.split()[5]
+
+    if '!!!' not in level:
+        continue
+
+    if 'httpd' in process:
+        process = 'httpd'
+    elif 'xrootd' in process:
+        process = 'xrootd'
+    else:
+        process = 'other'
+
+    data = ' '.join(line.split()[6:])
+
+
+    data_filter = ''
+    for word in data.split():
+        if '[0x' in word:
+            word = 'HEXNUMBNER'
+   
+        data_filter = data_filter + ' ' + word 
+
+
+    if data_filter in messages[process].keys():
+        messages[process][data_filter] += 1
+    else:
+        messages[process][data_filter] = 1
+
+
+for service in services:
+    messages_sorted = sorted(messages[service].items(), 
+                             key=lambda x:-x[1])
+
+    print ('Process %s:' % service)
+
+    for data in messages_sorted:
+        count = str(data[1]).rjust(8)
+        message = data[0] 
+
+        print ('%s : %s' % (count, message))
+
+    print ('\n')
