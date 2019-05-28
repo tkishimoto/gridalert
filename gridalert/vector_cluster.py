@@ -130,9 +130,6 @@ class VectorCluster:
 
         buffers = []
 
-        db = Sqlite3Helper(self.db_conf)
-        db.create_table()
-
         for ii, features in enumerate(data):
 
             distance = 0
@@ -152,17 +149,23 @@ class VectorCluster:
             tag = tags[ii]
             prediction = pred_data[ii]
         
-            update = 'prediction="%s",feature="%s"' % (prediction, 
-                                                       label)
-            where = 'tag="%s"' % tag 
+            buffers.append([prediction, label, tag])
 
-            db.update(update, where)
+        update = 'prediction=?,feature=?'
+        where = 'tag=?'
+
+        db = Sqlite3Helper(self.db_conf)
+        db.create_table()
+
+        db.update_many(update, where, buffers)
 
 
     def diff_anomaly(self):
         db = Sqlite3Helper(self.db_conf)
         fields = db.select(where='service="%s"' % self.service,
                            base_match=self.cl_conf)
+        db.close()
+
 
         center = {}
         distance = const.INVALID
@@ -178,6 +181,8 @@ class VectorCluster:
                 distance = float(data['distance'])
                 center = field
 
+        buffers = []
+
         for field in fields:
             diff = difflib.unified_diff(center['data'].splitlines(),
               field['data'].splitlines(),
@@ -190,8 +195,13 @@ class VectorCluster:
                             self.service,
                             field['date']))
 
-            update = 'diff="%s"' % ('\n'.join(diff))
-            where = 'tag="%s"' % field['tag']
+            diff = '\n'.join(diff)
+            diff = diff.replace('"', '')
 
-            db.update(update, where)
+            buffers.append([diff, field['tag']])
 
+        update = 'diff=?'
+        where = 'tag=?'
+
+        db = Sqlite3Helper(self.db_conf)
+        db.update_many(update, where, buffers)

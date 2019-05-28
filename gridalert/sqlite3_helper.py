@@ -79,5 +79,13 @@ class Sqlite3Helper:
         self.conn.commit()
 
 
+    def update_many(self, update, where, data):
+        update = 'update %s set %s where %s' % (self.table_name,
+                                                update,
+                                                where)
+        self.cur.executemany(update, data)
+        self.conn.commit()
+
+
     def close(self):
         self.conn.commit()
