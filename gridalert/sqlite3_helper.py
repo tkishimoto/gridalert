@@ -15,7 +15,7 @@ class Sqlite3Helper:
         self.column_names = const.DB_COLUMN_NAMES
         self.column_types = const.DB_COLUMN_TYPES
 
-        self.conn = sqlite3.connect(db_conf['path'])
+        self.conn = sqlite3.connect(db_conf['path'], timeout=600)
         self.conn.row_factory = sqlite3.Row
         self.cur = self.conn.cursor()
 

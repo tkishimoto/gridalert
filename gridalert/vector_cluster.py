@@ -117,9 +117,6 @@ class VectorCluster:
 
 
     def dump_to_db(self, tags, pred_data, data):
-        db = Sqlite3Helper(self.db_conf)
-        db.create_table()
-
         labels = []
         means  = []
         for ii, pred in enumerate(pred_data):
@@ -132,6 +129,9 @@ class VectorCluster:
         means = np.mean(np.array(means), axis=0)
 
         buffers = []
+
+        db = Sqlite3Helper(self.db_conf)
+        db.create_table()
 
         for ii, features in enumerate(data):
 
