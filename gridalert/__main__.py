@@ -12,6 +12,10 @@ def command_text(args):
     ga = GridAlert(args.conf)
     ga.text_to_db()
 
+def command_label(args):
+    ga = GridAlert(args.conf)
+    ga.labeling()
+
 def command_vector(args):
     ga = GridAlert(args.conf)
     ga.vectorize()
@@ -56,6 +60,14 @@ def main():
                              dest='conf', 
                              default='')
     parser_text.set_defaults(handler=command_text) 
+
+    # label
+    parser_label = subparsers.add_parser('label')
+    parser_label.add_argument('-c', '--conf', 
+                             action='store', 
+                             dest='conf', 
+                             default='')
+    parser_label.set_defaults(handler=command_label) 
 
     # vector
     parser_vector = subparsers.add_parser('vector')

@@ -6,6 +6,7 @@ import configparser
 from pathlib import Path
 
 from .data_converter import *
+from .label_helper import *
 from .text_vectorizer import *
 from .vector_cluster import *
 from .plot_helper import *
@@ -45,6 +46,10 @@ class GridAlert:
             dc = DataConverter(self.conf, cluster)
             dc.text_to_db()
 
+    def labeling(self):
+        for cluster in self.clusters:
+            lh = LabelHelper(self.conf, cluster)
+            lh.labeling()
 
     def vectorize(self):
         for cluster in self.clusters:

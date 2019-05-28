@@ -51,7 +51,7 @@ class DataConverter:
 
             logger.info('process (%s/%s) %s' % (ii+1, len(texts), text))
 
-            lines = open(text).readlines()
+            lines = open(text, errors='replace').readlines()
 
             for buffer in template.execute(lines):
 
