@@ -16,7 +16,7 @@ from .anomaly_alert import *
 
 class GridAlert:
 
-    def __init__(self, conf=''):
+    def __init__(self, conf='', options=''):
         cwd = Path(__file__).parent
 
         default = configparser.ConfigParser()
@@ -28,6 +28,19 @@ class GridAlert:
             else:
                 default.read('%s/%s' % (Path.cwd(), conf))
                     
+        for option in options.split():
+            keys = option.split('=')[0]
+            value = option.split('=')[1]
+        
+            default.set(keys.split(':')[0], 
+                        keys.split(':')[1], 
+                        value) 
+
+            logger.info('%s:%s is overwritten to %s' % (keys.split(':')[0],
+                                                        keys.split(':')[1],
+                                                        value)) 
+
+
         self.clusters = []
 
         for cluster in default.sections():

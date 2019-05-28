@@ -9,39 +9,39 @@ basicConfig(level=INFO,
 
 
 def command_text(args):
-    ga = GridAlert(args.conf)
+    ga = GridAlert(args.conf, args.option)
     ga.text_to_db()
 
 def command_label(args):
-    ga = GridAlert(args.conf)
+    ga = GridAlert(args.conf, args.option)
     ga.labeling()
 
 def command_vector(args):
-    ga = GridAlert(args.conf)
+    ga = GridAlert(args.conf, args.option)
     ga.vectorize()
 
 def command_cluster(args):
-    ga = GridAlert(args.conf)
+    ga = GridAlert(args.conf, args.option)
     ga.clustering()
 
 def command_plot(args):
-    ga = GridAlert(args.conf)
+    ga = GridAlert(args.conf, args.option)
     ga.plot()
 
 def command_cherrypy(args):
-    ga = GridAlert(args.conf)
+    ga = GridAlert(args.conf, args.option)
     ga.visualize()
 
 def command_html(args):
-    ga = GridAlert(args.conf)
+    ga = GridAlert(args.conf, args.option)
     ga.html()
 
 def command_alert(args):
-    ga = GridAlert(args.conf)
+    ga = GridAlert(args.conf, args.option)
     ga.alert()
 
 def command_all(args):
-    ga = GridAlert(args.conf)
+    ga = GridAlert(args.conf, args.option)
     ga.text_to_db()
     ga.vectorize()
     ga.clustering()
@@ -59,6 +59,10 @@ def main():
                              action='store', 
                              dest='conf', 
                              default='')
+    parser_text.add_argument('-o', '--option', 
+                             action='store', 
+                             dest='option', 
+                             default='')
     parser_text.set_defaults(handler=command_text) 
 
     # label
@@ -66,6 +70,10 @@ def main():
     parser_label.add_argument('-c', '--conf', 
                              action='store', 
                              dest='conf', 
+                             default='')
+    parser_label.add_argument('-o', '--option', 
+                             action='store', 
+                             dest='option', 
                              default='')
     parser_label.set_defaults(handler=command_label) 
 
@@ -75,6 +83,10 @@ def main():
                              action='store', 
                              dest='conf', 
                              default='')
+    parser_vector.add_argument('-o', '--option', 
+                             action='store', 
+                             dest='option', 
+                             default='')
     parser_vector.set_defaults(handler=command_vector) 
 
     # cluster
@@ -82,6 +94,10 @@ def main():
     parser_cluster.add_argument('-c', '--conf', 
                              action='store', 
                              dest='conf', 
+                             default='')
+    parser_cluster.add_argument('-o', '--option', 
+                             action='store', 
+                             dest='option', 
                              default='')
     parser_cluster.set_defaults(handler=command_cluster) 
 
@@ -91,6 +107,10 @@ def main():
                              action='store', 
                              dest='conf', 
                              default='')
+    parser_plot.add_argument('-o', '--option', 
+                             action='store', 
+                             dest='option', 
+                             default='')
     parser_plot.set_defaults(handler=command_plot) 
  
     # cherrypy
@@ -98,6 +118,10 @@ def main():
     parser_cherrypy.add_argument('-c', '--conf', 
                              action='store', 
                              dest='conf', 
+                             default='')
+    parser_cherrypy.add_argument('-o', '--option', 
+                             action='store', 
+                             dest='option', 
                              default='')
     parser_cherrypy.set_defaults(handler=command_cherrypy) 
 
@@ -107,6 +131,10 @@ def main():
                              action='store', 
                              dest='conf', 
                              default='')
+    parser_html.add_argument('-o', '--option', 
+                             action='store', 
+                             dest='option', 
+                             default='')
     parser_html.set_defaults(handler=command_html) 
  
     # alert
@@ -115,6 +143,10 @@ def main():
                              action='store', 
                              dest='conf', 
                              default='')
+    parser_alert.add_argument('-o', '--option', 
+                             action='store', 
+                             dest='option', 
+                             default='')
     parser_alert.set_defaults(handler=command_alert) 
 
     # all
@@ -122,6 +154,10 @@ def main():
     parser_all.add_argument('-c', '--conf', 
                              action='store', 
                              dest='conf', 
+                             default='')
+    parser_all.add_argument('-o', '--option', 
+                             action='store', 
+                             dest='option', 
                              default='')
     parser_all.set_defaults(handler=command_all) 
 
