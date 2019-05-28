@@ -5,6 +5,7 @@ logger = getLogger(__name__)
 import os
 
 from .sqlite3_helper import *
+from .util import hash as util_hash
 
 class LabelHelper:
 
@@ -36,26 +37,43 @@ class LabelHelper:
    
     def label_sqlite3(self):
         db   = Sqlite3Helper(self.db_conf)
-        where = 'service="%s" and diff!=""' % self.service
+        where = 'service="%s"' % self.service
         fields = db.select(where=where, base_match=self.cl_conf)
 
+        data_dict = {} # {hash: [original, diff, label, [tags]]}
+
         for ii, field in enumerate(fields):
+            tag   = field['tag']
+            data  = field['data']
+            diff  = field['diff']
+            label = field['label']
+
+            diff = diff.split('\n')[3:]
+            diff = '\n'.join(diff)
+
+            hash = util_hash.md5('dummy', 'dummy', 'dummy', diff)
+
+            if hash in data_dict.keys():
+                data_dict[hash][3].append(tag)
+            else:
+                data_dict[hash] = [data, diff, label, [tag]]
+
+        counter = 1
+        for hash, value in data_dict.items():
+
             os.system('clear')
 
-            tag  = field['tag']
-            host = field['host']
-            date = field['date']
-            label = field['label']
-            data = field['data']
-            diff = field['diff']
+            original = value[0]
+            diff = value[1]
+            label = value[2]
+            tags = value[3]
 
-            logger.info('Process (%s/%s) %s %s %s' % (ii+1,
-                                                      len(fields),
-                                                      host, 
-                                                      self.service, date))                   
+            logger.info('Process (%s/%s) %s counts observed' % (counter,
+                                                      len(data_dict.keys()),
+                                                      len(tags)))                   
      
             logger.info('Original logs:')
-            print(data)
+            print(original)
             logger.info('Diff to normal logs:')
             print(diff)
             print('\n')
@@ -63,9 +81,11 @@ class LabelHelper:
             print('New label (%s) :' % label)
             label = input()
 
-            update = 'label="%s"' % label
-            where = 'tag="%s"' % tag
+            for tag in tags:
 
-            db.update(update, where)
+                update = 'label="%s"' % label
+                where = 'tag="%s"' % tag
 
+                db.update(update, where)
 
+            counter += 1    
