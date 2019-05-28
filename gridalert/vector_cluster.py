@@ -48,6 +48,7 @@ class VectorCluster:
             else:
                 logger.info('%s to %s not supported' % (vector_type, cluster_type))
 
+            self.show_accuracy()
 
             if self.cl_conf['use_diff'] == 'True':
                 self.diff_anomaly()
@@ -148,8 +149,7 @@ class VectorCluster:
             # 'tag', 'host', 'date', 'prediction', 'feature', 'diff'
             tag = tags[ii]
             prediction = pred_data[ii]
-        
-            buffers.append([prediction, label, tag])
+            buffers.append([str(prediction), label, tag])
 
         update = 'prediction=?,feature=?'
         where = 'tag=?'
@@ -158,6 +158,44 @@ class VectorCluster:
         db.create_table()
 
         db.update_many(update, where, buffers)
+
+
+    def show_accuracy(self):
+        db = Sqlite3Helper(self.db_conf)
+        fields = db.select(where='service="%s"' % self.service,
+                           base_match=self.cl_conf)
+
+        den0, den1 = 0., 0.
+        num0, num1 = 0., 0.
+
+        for field in fields:
+            if field['label'] == str(const.NORMAL):
+                den1 += 1
+
+                if field['prediction'] == str(const.NORMAL):
+                    num1 += 1
+
+            else:
+                den0 += 1
+
+                if field['prediction'] == str(const.NORMAL):
+                    num0 += 1
+
+        acc0 = 'nan'
+        acc1 = 'nan'
+
+        if den0 > 0:
+            acc0 = num0/den0
+
+        if den1 > 1:
+            acc1 = num1/den1
+
+        logger.info('accuracy of normal events (pred/pre-label): %s/%s = %s' % (num1,
+                                                               den1,
+                                                               acc1))
+        logger.info('accuracy of anomaly events (pred/pre-label): %s/%s = %s' % (num0,
+                                                               den0,
+                                                               acc0))
 
 
     def diff_anomaly(self):
