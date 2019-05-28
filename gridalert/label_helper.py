@@ -36,7 +36,7 @@ class LabelHelper:
    
     def label_sqlite3(self):
         db   = Sqlite3Helper(self.db_conf)
-        where = 'service="%s"' % self.service
+        where = 'service="%s" and diff!=""' % self.service
         fields = db.select(where=where, base_match=self.cl_conf)
 
         for ii, field in enumerate(fields):
