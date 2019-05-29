@@ -190,10 +190,11 @@ class VectorCluster:
         if den1 > 1:
             acc1 = num1/den1
 
-        logger.info('accuracy of normal events (pred/pre-label): %s/%s = %s' % (num1,
+        logger.info('RESULTS: %s %s' % (self.cl_conf['name'], self.service))
+        logger.info('RESULTS: accuracy of normal events (pred/pre-label): %s/%s = %s' % (num1,
                                                                den1,
                                                                acc1))
-        logger.info('accuracy of anomaly events (pred/pre-label): %s/%s = %s' % (num0,
+        logger.info('RESULTS: accuracy of anomaly events (pred/pre-label): %s/%s = %s' % (num0,
                                                                den0,
                                                                acc0))
 
