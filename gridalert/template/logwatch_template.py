@@ -119,7 +119,7 @@ class LogwatchTemplate:
             service  = self.service_names[ii]
             metadata = 'range=%s,level=%s' % (meta['range'], meta['level'])
             label    = '1'
-            tag      = util_hash.md5(cluster, host, str(date), service, data)
+            tag      = util_hash.md5([cluster, host, str(date), service, data])
 
             buffers.append([tag, cluster, host, date, service, 
                             metadata, data, label])

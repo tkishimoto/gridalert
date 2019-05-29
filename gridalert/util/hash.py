@@ -1,8 +1,8 @@
 import hashlib
 
-def md5(cluster, host, date, service, data):
+def md5(data):
 
-    dat = cluster + host + date + service + data
+    dat = ''.join(data)
     hs = hs = hashlib.md5(dat.encode()).hexdigest()
 
     return hs
