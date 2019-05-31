@@ -75,7 +75,7 @@ class GridAlert:
             vc = VectorCluster(self.conf, cluster)
             vc.clustering()
 
- 
+
     def plot(self):
         for cluster in self.clusters:
             ph = PlotHelper(self.conf, cluster)

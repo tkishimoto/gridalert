@@ -60,7 +60,6 @@ class VectorCluster:
                                                        self.cl_conf)
   
         data = util_reader.get_data_from_doc2vec(self.model_vec_path, docs, self.cl_conf)
-        print(data)
         return data, tags
 
 
@@ -100,7 +99,6 @@ class VectorCluster:
                        min_samples=int(cl_conf['cluster_min_samples']))
         model.fit(data)
         pred_data = model.labels_
-
         self.dump_to_db(tags, pred_data, data)          
  
         pickle.dump(model, open(self.model_cls_path, 'wb'))
@@ -158,16 +156,16 @@ class VectorCluster:
         num0, num1 = 0., 0.
 
         for field in fields:
-            if field['label'] == str(const.NORMAL):
+            if field['label'] != str(const.ABNORMAL):
                 den1 += 1
 
-                if field['prediction'] == str(const.NORMAL):
+                if field['prediction'] != str(const.ABNORMAL):
                     num1 += 1
 
             else:
                 den0 += 1
 
-                if field['prediction'] == str(const.NORMAL):
+                if field['prediction'] == str(const.ABNORMAL):
                     num0 += 1
 
         acc0 = 'nan'
