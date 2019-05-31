@@ -39,14 +39,12 @@ class VectorCluster:
             self.model_cls_path = util_path.model_cls_path(self.cl_conf, service)
 
             vector_type = self.cl_conf['vector_type']
+            vector_func = getattr(self, "get_data_from_%s" % (vector_type), None)
+            data, tags = vector_func()
+
             cluster_type = self.cl_conf['cluster_type']
-
-            func = getattr(self, "%s_to_%s" % (vector_type, cluster_type), None)
-            if func is not None:
-                func()
-
-            else:
-                logger.info('%s to %s not supported' % (vector_type, cluster_type))
+            cluster_func = getattr(self, "cluster_%s" % (cluster_type), None)
+            cluster_func(data, tags)
 
             self.show_accuracy()
 
@@ -54,36 +52,27 @@ class VectorCluster:
                 self.diff_anomaly()
 
 
-    def doc2vec_to_isolationforest(self):
+    def get_data_from_doc2vec(self):
  
-        data, tags = util_reader.get_data_from_doc2vec(self.model_vec_path)
-        self.cluster_isolationforest(data, tags) 
-      
-
-    def fasttext_to_isolationforest(self):
         db = Sqlite3Helper(self.db_conf)
-        data, tags = util_reader.get_data_from_sqlite3(db,
+        docs, tags = util_reader.get_data_from_sqlite3(db,
+                                                      'service="%s"' % self.service,
+                                                       self.cl_conf)
+  
+        data = util_reader.get_data_from_doc2vec(self.model_vec_path, docs, self.cl_conf)
+        print(data)
+        return data, tags
+
+
+    def get_data_from_fasttext(self):
+ 
+        db = Sqlite3Helper(self.db_conf)
+        docs, tags = util_reader.get_data_from_sqlite3(db,
                                                       'service="%s"' % self.service,
                                                        self.cl_conf)
  
-        data = util_reader.get_data_from_fasttext(self.model_vec_path, data)
-        self.cluster_isolationforest(data, tags) 
-
-
-    def doc2vec_to_dbscan(self):
- 
-        data, tags = util_reader.get_data_from_doc2vec(self.model_vec_path)
-        self.cluster_dbscan(data, tags) 
-
-
-    def fasttext_to_dbscan(self): 
-        db = Sqlite3Helper(self.db_conf)
-        data, tags = util_reader.get_data_from_sqlite3(db,
-                                                      'service="%s"' % self.service,
-                                                       self.cl_conf)
-
-        data = util_reader.get_data_from_fasttext(self.model_vec_path, data)
-        self.cluster_dbscan(data, tags) 
+        data = util_reader.get_data_from_fasttext(self.model_vec_path, docs, self.cl_conf)
+        return data, tags
 
 
     def cluster_isolationforest(self, data, tags):

@@ -34,22 +34,24 @@ class TextVectorizer:
             self.model_path = util_path.model_vec_path(self.cl_conf, service)
 
             db_type = self.db_conf['type']
+            db_func = getattr(self, "get_data_from_%s" % (db_type), None)
+            data, tags = db_func()
+
             vector_type = self.cl_conf['vector_type']
+            vector_func = getattr(self, "vectorize_%s" % (vector_type), None)
+            vector_func(data, tags)
 
-            func = getattr(self, "%s_to_%s" % (db_type, vector_type), None)
-            if func is not None:
-                func()
-
-            else:
-                logger.info('%s to %s not supported' % (db_type, vector_type))
-
-
-    def sqlite3_to_doc2vec(self):
-
+ 
+    def get_data_from_sqlite3(self):
+ 
         db = Sqlite3Helper(self.db_conf) 
         data, tags = util_reader.get_data_from_sqlite3(db, 
                                                       'service="%s"' % self.service,
                                                        self.cl_conf)
+        return data, tags
+
+
+    def vectorize_doc2vec(self, data, tags):
 
         trainings = []       
         for doc, tag in zip(data, tags):
@@ -72,12 +74,7 @@ class TextVectorizer:
         model.save(self.model_path)
 
 
-    def sqlite3_to_fasttext(self):
-
-        db = Sqlite3Helper(self.db_conf) 
-        data, tags = util_reader.get_data_from_sqlite3(db, 
-                                                       'service="%s"' % self.service,
-                                                       self.cl_conf)
+    def vectorize_fasttext(self, data, tags):
 
         text_path = self.cl_conf['model_dir'] + '/fasttext.tmp'
 

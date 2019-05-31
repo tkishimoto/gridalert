@@ -43,67 +43,59 @@ class PlotHelper:
             self.plot_path = util_path.plot_path(self.cl_conf, service)
 
             vector_type = self.cl_conf['vector_type']
+            vector_func = getattr(self, "get_data_from_%s" % (vector_type), None)
+            data, tags = vector_func()
+
             cluster_type = self.cl_conf['cluster_type']
-
-            func = getattr(self, "plot_%s_%s" % (vector_type, cluster_type), None)
-            if func is not None:
-                func()
-
-            else:
-                logger.info('plot %s %s not supported' % (vector_type, cluster_type))
+            cluster_func = getattr(self, "predict_%s" % (cluster_type), None)
+            pred_data = cluster_func(data)
+   
+            self.plot_clustering(data, tags, pred_data)
 
 
-    def plot_doc2vec_isolationforest(self):
+    def get_data_from_doc2vec(self):
 
-        data, tags = util_reader.get_data_from_doc2vec(self.model_vec_path)
+        db = Sqlite3Helper(self.db_conf)
+        docs, tags = util_reader.get_data_from_sqlite3(db,
+                                                      'service="%s"' % self.service,
+                                                       self.cl_conf)
+
+        data = util_reader.get_data_from_doc2vec(self.model_vec_path, docs, self.cl_conf)
+        return data, tags
+
+
+    def get_data_from_fasttext(self):
+
+        db = Sqlite3Helper(self.db_conf)
+        docs, tags = util_reader.get_data_from_sqlite3(db,
+                                                      'service="%s"' % self.service,
+                                                       self.cl_conf)
+
+        data = util_reader.get_data_from_fasttext(self.model_vec_path, docs, self.cl_conf)
+        return data, tags
+
+    def predict_isolationforest(self, data):
 
         cluster_model = pickle.load(open(self.model_cls_path, 'rb'))
         pred_data = cluster_model.predict(data)
 
-        self.plot_clustering(data, tags, pred_data)
+        return pred_data
 
 
-    def plot_fasttext_isolationforest(self):
-        db = Sqlite3Helper(self.db_conf)
-        data, tags = util_reader.get_data_from_sqlite3(db,
-                                                      'service="%s"' % self.service,
-                                                       self.cl_conf)
-
-        data = util_reader.get_data_from_fasttext(self.model_vec_path, data)
-
-        cluster_model = pickle.load(open(self.model_cls_path, 'rb'))
-        pred_data = cluster_model.predict(data)
-
-        self.plot_clustering(data, tags, pred_data)
-
-
-    def plot_doc2vec_dbscan(self):
-
-        data, tags = util_reader.get_data_from_doc2vec(self.model_vec_path)
+    def predict_dbscan(self, data):
 
         cluster_model = pickle.load(open(self.model_cls_path, 'rb'))
         pred_data = cluster_model.labels_
 
-        self.plot_clustering(data, tags, pred_data)
+        return pred_data
 
-
-    def plot_fasttext_dbscan(self):
-        db = Sqlite3Helper(self.db_conf)
-        data, tags = util_reader.get_data_from_sqlite3(db,
-                                                      'service="%s"' % self.service,
-                                                       self.cl_conf)
-
-        data = util_reader.get_data_from_fasttext(self.model_vec_path, data)
-
-        cluster_model = pickle.load(open(self.model_cls_path, 'rb'))
-        pred_data = cluster_model.labels_
-
-        self.plot_clustering(data, tags, pred_data)
 
     def plot_clustering(self, data, tags, pred_data):
-        conf = self.conf
+        conf = self.cl_conf
 
         ndim = len(data[0])
+        arbitrary_dim = len(conf['cluster_arbitrary_words'].split(','))
+        vector_dim = ndim - arbitrary_dim
         data = np.array(data)
 
         fig, axes = plt.subplots(nrows=ndim, ncols=ndim)
@@ -140,9 +132,15 @@ class PlotHelper:
                     b.set_urls(tag2)
 
                 if (iy == (ndim-1)):
-                    axes[iy][ix].set_xlabel('Feature %s' % ix)
+                    label = 'Feature %s' % ix
+                    if (ix+1) > vector_dim:
+                        label = 'Arbitrary %s' % (ix-vector_dim)
+                    axes[iy][ix].set_xlabel(label)
                 if (ix == (0)):
-                    axes[iy][ix].set_ylabel('Feature %s' % iy)
+                    label = 'Feature %s' % iy
+                    if (iy+1) > vector_dim:
+                        label = 'Arbitrary %s' % (iy-vector_dim)
+                    axes[iy][ix].set_ylabel(label)
 
         fig.legend([a,b], ['normal events', 'anomaly events'])
         plt.savefig(self.plot_path)
