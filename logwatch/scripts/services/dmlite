@@ -1,5 +1,6 @@
 #!/bin/python
 import sys
+import re
 lines = sys.stdin.readlines()
 
 services = ['httpd', 'xrootd', 'other']
@@ -27,9 +28,42 @@ for line in lines:
 
     data_filter = ''
     for word in data.split():
+        if re.match('\'\/dpm\/.*\/home\/.*\'', word):
+            word = 'DPM_LFN'  
+
+        if re.match('\/dpm\/.*\/home\/.*', word):
+            word = 'DPM_LFN'  
+
+        if re.match('\'\/.*\/\d{4}-\d{2}-\d{2}\/.*\'', word):
+            word = 'DPM_TURL'  
+
+        if re.match('\/.*\/\d{4}-\d{2}-\d{2}\/.*', word):
+            word = 'DPM_TURL'  
+
         if '[0x' in word:
             word = 'HEXNUMBNER'
    
+        if re.match('\'..\'', word): 
+            word = 'RAMDOM_DIR'
+
+        if word.isdigit():
+            word = 'NUMBER'
+
+        if re.match('\(\d+\)', word): 
+            word = '(NUMBER)'
+
+        if re.match('\(\d+', word): 
+            word = '(NUMBER'
+
+        if re.match('\d+\)', word): 
+            word = 'NUMBER)'
+
+        if re.match('\d+\:\'.*\'', word): 
+            word = 'FILE_NAME'
+
+        if re.match('\'\d+\-..\'', word): 
+            word = 'FILE_KEY'
+
         data_filter = data_filter + ' ' + word 
 
 
@@ -49,6 +83,6 @@ for service in services:
         count = str(data[1]).rjust(8)
         message = data[0] 
 
-        print ('%s : %s' % (count, message))
+        print ('%s time(s) : %s' % (count, message))
 
     print ('\n')
