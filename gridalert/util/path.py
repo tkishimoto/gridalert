@@ -12,6 +12,13 @@ def model_cls_path(cl_conf, service):
                                     cl_conf['cluster_type'])
     return cl_conf['model_dir'] + '/' + model
 
+def model_result_path(cl_conf, service):
+    model = '%s.%s.%s.%s.result.db' % (cl_conf['name'],
+                                    service,
+                                    cl_conf['vector_type'],
+                                    cl_conf['cluster_type'])
+    return cl_conf['model_dir'] + '/' + model
+
 def plot_path(cl_conf, service):
     plot = '%s.%s.%s.%s.svg' % (cl_conf['name'],
                                  service,

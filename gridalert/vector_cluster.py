@@ -5,6 +5,7 @@ logger = getLogger(__name__)
 import math
 import pickle
 import difflib
+import shelve
 import numpy as np
 from pprint import pformat
 
@@ -30,6 +31,7 @@ class VectorCluster:
         self.service    = ''
         self.model_vec_path = ''
         self.model_cls_path = ''
+        self.model_result_path = ''
 
         # scan db
         self.scan_db    = []
@@ -50,6 +52,7 @@ class VectorCluster:
             self.service = service
             self.model_vec_path = util_path.model_vec_path(self.cl_conf, service)
             self.model_cls_path = util_path.model_cls_path(self.cl_conf, service)
+            self.model_result_path = util_path.model_result_path(self.cl_conf, service)
 
             vector_type = self.cl_conf['vector_type']
             vector_func = getattr(self, "get_data_from_%s" % (vector_type), None)
@@ -161,26 +164,31 @@ class VectorCluster:
 
         db.update_many(update, where, buffers)
 
+        # shelve
+        shelve_db = shelve.open(self.model_result_path)
+        for buffer in buffers:
+            shelve_db[buffer[2]] = {'label': buffer[1],
+                                    'prediction':buffer[0]}
+        shelve_db.close()
+
 
     def save_accuracy(self):
-        db = Sqlite3Helper(self.db_conf)
-        fields = db.select(where='service="%s"' % self.service,
-                           base_match=self.cl_conf)
+        shelve_db = shelve.open(self.model_result_path)
 
         den0, den1 = 0., 0.
         num0, num1 = 0., 0.
 
-        for field in fields:
-            if field['label'] != str(const.ABNORMAL):
+        for key in shelve_db:
+            if shelve_db[key]['label'] != str(const.ABNORMAL):
                 den1 += 1
 
-                if field['prediction'] != str(const.ABNORMAL):
+                if shelve_db[key]['prediction'] != str(const.ABNORMAL):
                     num1 += 1
 
             else:
                 den0 += 1
 
-                if field['prediction'] == str(const.ABNORMAL):
+                if shelve_db[key]['prediction'] == str(const.ABNORMAL):
                     num0 += 1
 
         acc0 = '0'
@@ -201,6 +209,7 @@ class VectorCluster:
                                                                acc0))
 
         scan_dict = {}
+        scan_dict['service'] = self.service
         scan_dict['acc0'] = float(acc0)
         scan_dict['acc1'] = float(acc1)
         scan_dict['sort'] = float(acc1) + float(acc0)
@@ -214,18 +223,19 @@ class VectorCluster:
         self.scan_db.append(scan_dict)
      
    
-    def show_accuracy(self):
+    def get_accuracy(self):
+        return self.scan_db
 
-        acc_sort = sorted(self.scan_db, key=lambda x:-x['sort'])
+        #acc_sort = sorted(self.scan_db, key=lambda x:-x['sort'])
 
-        for acc in acc_sort:
-            message = 'acc (normal)=%s, acc (anomaly)=%s : ' % (acc['acc1'], acc['acc0'])
+        #for acc in acc_sort:
+        #    message = 'acc (normal)=%s, acc (anomaly)=%s : ' % (acc['acc1'], acc['acc0'])
 
             #for param in const.MLPARAMS:
             #    message += ' %s=%s' % (param, acc['params'][param])           
 
-            logger.info(message)
-            logger.info(pformat(acc))
+        #    logger.info(message)
+        #    logger.info(pformat(acc))
 
 
     def diff_anomaly(self):
