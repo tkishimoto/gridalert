@@ -27,15 +27,6 @@ class TextVectorizer:
         self.model_path = ''
 
    
-    def set_conf(self, conf, cluster):
-
-        self.conf       = conf
-        self.cluster    = cluster
-
-        self.db_conf    = conf['db']
-        self.cl_conf    = conf[cluster]
-
-
     def vectorize(self):
 
         for service in self.cl_conf['services'].split(','):

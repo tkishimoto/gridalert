@@ -37,15 +37,6 @@ class VectorCluster:
         self.scan_db    = []
 
    
-    def set_conf(self, conf, cluster):
-
-        self.conf       = conf
-        self.cluster    = cluster
-
-        self.db_conf    = conf['db']    
-        self.cl_conf    = conf[cluster]
-
-
     def clustering(self):
 
         for service in self.cl_conf['services'].split(','):
