@@ -85,7 +85,29 @@ class LogwatchTemplate:
                 logger.info('%s not supported' % (service))
            
 
-    def execute(self, lines):
+    def execute(self, text):
+
+        buffers = []
+        buffers_tmp = []
+        logwatch = False
+
+        for line in  open(text, errors='replace'):
+      
+            if ('##### Logwatch' in line) and (not 'End' in line):
+                logwatch = True
+
+            if logwatch:
+                buffers_tmp.append(line)
+
+            if ('##### Logwatch End' in line):
+                logwatch = False
+                buffers += self.extract(buffers_tmp)
+                buffers_tmp = []
+
+        return buffers
+
+
+    def extract(self, lines):
         # shoud return lists of 'tag', 'cluster', 'host', 'date',
         #              'service', 'metadata', 'data', 'label'  
 
@@ -120,7 +142,6 @@ class LogwatchTemplate:
             metadata = 'range=%s,level=%s' % (meta['range'], meta['level'])
             label    = '1'
             tag      = util_hash.md5([cluster, host, str(date), service, data])
-
             buffers.append([tag, cluster, host, date, service, 
                             metadata, data, label])
 

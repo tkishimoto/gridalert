@@ -51,15 +51,15 @@ class DataConverter:
 
             logger.info('process (%s/%s) %s' % (ii+1, len(texts), text))
 
-            lines = open(text, errors='replace').readlines()
+            #lines = open(text, errors='replace').readlines()
 
-            for buffer in template.execute(lines):
+            for buffer in template.execute(text):
 
                 if util_match.base_match(self.cl_conf, 
                     buffer[const.DB_COLUMN_NAMES.index('cluster')], 
                     buffer[const.DB_COLUMN_NAMES.index('host')], 
                     buffer[const.DB_COLUMN_NAMES.index('date')]):
-        
+       
                     # prediction, feature, diff
                     buffer = buffer + ['unkonwn', 'unkonwn', 'unkonwn']
 

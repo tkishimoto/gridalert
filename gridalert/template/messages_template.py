@@ -17,10 +17,10 @@ class MessagesTemplate:
         logger.info('load messages template')
  
 
-    def execute(self, lines):
+    def execute(self, text):
         buffers = []
 
-        for line in lines:
+        for line in open(text):
             #  May 13 03:10:01 localhost data
             meta = line.split()
 
