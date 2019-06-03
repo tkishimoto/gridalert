@@ -6,6 +6,7 @@ import math
 import pickle
 import difflib
 import numpy as np
+from pprint import pformat
 
 from gensim.models.doc2vec import Doc2Vec
 from sklearn.ensemble import IsolationForest
@@ -30,6 +31,18 @@ class VectorCluster:
         self.model_vec_path = ''
         self.model_cls_path = ''
 
+        # scan db
+        self.scan_db    = []
+
+   
+    def set_conf(self, conf, cluster):
+
+        self.conf       = conf
+        self.cluster    = cluster
+
+        self.db_conf    = conf['db']    
+        self.cl_conf    = conf[cluster]
+
 
     def clustering(self):
 
@@ -46,7 +59,7 @@ class VectorCluster:
             cluster_func = getattr(self, "cluster_%s" % (cluster_type), None)
             cluster_func(data, tags)
 
-            self.show_accuracy()
+            self.save_accuracy()
 
             if self.cl_conf['use_diff'] == 'True':
                 self.diff_anomaly()
@@ -147,7 +160,7 @@ class VectorCluster:
         db.update_many(update, where, buffers)
 
 
-    def show_accuracy(self):
+    def save_accuracy(self):
         db = Sqlite3Helper(self.db_conf)
         fields = db.select(where='service="%s"' % self.service,
                            base_match=self.cl_conf)
@@ -168,8 +181,8 @@ class VectorCluster:
                 if field['prediction'] == str(const.ABNORMAL):
                     num0 += 1
 
-        acc0 = 'nan'
-        acc1 = 'nan'
+        acc0 = '0'
+        acc1 = '0'
 
         if den0 > 0:
             acc0 = num0/den0
@@ -184,6 +197,33 @@ class VectorCluster:
         logger.info('RESULTS: accuracy of anomaly events (pred/pre-label): %s/%s = %s' % (num0,
                                                                den0,
                                                                acc0))
+
+        scan_dict = {}
+        scan_dict['acc0'] = float(acc0)
+        scan_dict['acc1'] = float(acc1)
+        scan_dict['sort'] = float(acc1) + float(acc0)
+
+        params = {}
+        for param in const.MLPARAMS:
+            params[param] = self.cl_conf[param]
+      
+        scan_dict['params'] = params
+ 
+        self.scan_db.append(scan_dict)
+     
+   
+    def show_accuracy(self):
+
+        acc_sort = sorted(self.scan_db, key=lambda x:-x['sort'])
+
+        for acc in acc_sort:
+            message = 'acc (normal)=%s, acc (anomaly)=%s : ' % (acc['acc1'], acc['acc0'])
+
+            #for param in const.MLPARAMS:
+            #    message += ' %s=%s' % (param, acc['params'][param])           
+
+            logger.info(message)
+            logger.info(pformat(acc))
 
 
     def diff_anomaly(self):

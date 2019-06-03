@@ -3,6 +3,7 @@ logger = getLogger(__name__)
 
 import cherrypy
 import configparser
+from itertools import product
 from pathlib import Path
 
 from .data_converter import *
@@ -13,6 +14,8 @@ from .plot_helper import *
 from .data_visualizer import *
 from .html_helper import *
 from .anomaly_alert import *
+
+from .const import Const as const
 
 class GridAlert:
 
@@ -74,6 +77,42 @@ class GridAlert:
         for cluster in self.clusters:
             vc = VectorCluster(self.conf, cluster)
             vc.clustering()
+
+   
+    def scan(self):
+        for cluster in self.clusters:
+        
+            params = []
+            for param in const.MLPARAMS:
+                params.append(self.conf[cluster][param].split(','))
+
+            tv = TextVectorizer(self.conf, cluster)
+            vc = VectorCluster(self.conf, cluster)
+
+            total = 0  
+            for param in product(*params):
+                total += 1
+
+            counter = 0
+            for param in product(*params):
+                for ii, value in enumerate(param):
+                    self.conf.set(cluster,
+                                  const.MLPARAMS[ii], 
+                                  value)
+
+                counter += 1
+                logger.info('Hyper parameters (%s/%s):' % (counter, total))
+                for ii, value in enumerate(param):
+                    key = const.MLPARAMS[ii]
+                    logger.info('%s : %s' % (key, self.conf[cluster][key]))
+
+                tv.set_conf(self.conf, cluster)
+                vc.set_conf(self.conf, cluster)
+
+                tv.vectorize()
+                vc.clustering()
+
+            vc.show_accuracy()         
 
 
     def plot(self):

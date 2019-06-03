@@ -24,6 +24,10 @@ def command_cluster(args):
     ga = GridAlert(args.conf, args.option)
     ga.clustering()
 
+def command_scan(args):
+    ga = GridAlert(args.conf, args.option)
+    ga.scan()
+
 def command_plot(args):
     ga = GridAlert(args.conf, args.option)
     ga.plot()
@@ -101,6 +105,18 @@ def main():
                              default='')
     parser_cluster.set_defaults(handler=command_cluster) 
 
+    # scan
+    parser_scan = subparsers.add_parser('scan')
+    parser_scan.add_argument('-c', '--conf', 
+                             action='store', 
+                             dest='conf', 
+                             default='')
+    parser_scan.add_argument('-o', '--option', 
+                             action='store', 
+                             dest='option', 
+                             default='')
+    parser_scan.set_defaults(handler=command_scan) 
+ 
     # plot
     parser_plot = subparsers.add_parser('plot')
     parser_plot.add_argument('-c', '--conf', 

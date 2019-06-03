@@ -78,7 +78,7 @@ def get_data_from_fasttext(model_path, docs, cl_conf):
 
         data.append(vector)
 
-    if cl_conf['cluster_normalize'] = 'True':
+    if cl_conf['cluster_normalize'] == 'True':
         mm = preprocessing.MinMaxScaler()
         data = mm.fit_transform(data).tolist()
     
