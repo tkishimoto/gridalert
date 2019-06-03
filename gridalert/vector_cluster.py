@@ -136,16 +136,16 @@ class VectorCluster:
 
             distance = math.sqrt(distance)
 
-            label = ''
+            feature = ''
             for jj in range(len(means)):
-                label += 'feature%s=%s,' % (jj, data[ii][jj])
+                feature += 'feature%s=%s,' % (jj, data[ii][jj])
 
-            label += 'distance=%s' % distance
+            feature += 'distance=%s' % distance
 
             # 'tag', 'host', 'date', 'prediction', 'feature', 'diff'
             tag = tags[ii]
             prediction = pred_data[ii]
-            buffers.append([str(prediction), label, tag])
+            buffers.append([str(prediction), feature, tag])
 
         update = 'prediction=?,feature=?'
         where = 'tag=?'
@@ -158,8 +158,7 @@ class VectorCluster:
         # shelve
         shelve_db = shelve.open(self.model_result_path)
         for buffer in buffers:
-            shelve_db[buffer[2]] = {'label': buffer[1],
-                                    'prediction':buffer[0]}
+            shelve_db[buffer[2]] = {'prediction':buffer[0]}
         shelve_db.close()
 
 
@@ -170,7 +169,11 @@ class VectorCluster:
         num0, num1 = 0., 0.
 
         for key in shelve_db:
-            if shelve_db[key]['label'] != str(const.ABNORMAL):
+            db = Sqlite3Helper(self.db_conf)
+            field = db.select(where='tag="%s"' % key)
+            label = field[0]['label']
+
+            if label != str(const.ABNORMAL):
                 den1 += 1
 
                 if shelve_db[key]['prediction'] != str(const.ABNORMAL):
@@ -216,17 +219,6 @@ class VectorCluster:
    
     def get_accuracy(self):
         return self.scan_db
-
-        #acc_sort = sorted(self.scan_db, key=lambda x:-x['sort'])
-
-        #for acc in acc_sort:
-        #    message = 'acc (normal)=%s, acc (anomaly)=%s : ' % (acc['acc1'], acc['acc0'])
-
-            #for param in const.MLPARAMS:
-            #    message += ' %s=%s' % (param, acc['params'][param])           
-
-        #    logger.info(message)
-        #    logger.info(pformat(acc))
 
 
     def diff_anomaly(self):
