@@ -27,5 +27,5 @@ class Const:
                 'cluster_n_estimators', 'cluster_contamination',
                 'cluster_random_state', 'cluster_max_samples',
                 'cluster_eps', 'cluster_min_samples',
-                'cluster_normalize' ]               
+                'cluster_n_jobs', 'cluster_normalize' ]               
 
