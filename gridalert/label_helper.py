@@ -51,7 +51,7 @@ class LabelHelper:
             diff = diff.split('\n')[3:]
             diff = '\n'.join(diff)
 
-            hash = util_hash.md5('dummy', 'dummy', 'dummy', diff)
+            hash = util_hash.md5([diff])
 
             if hash in data_dict.keys():
                 data_dict[hash][3].append(tag)
