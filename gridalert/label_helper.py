@@ -68,6 +68,7 @@ class LabelHelper:
             label = value[2]
             tags = value[3]
 
+            logger.info('Process cluster : %s' % self.cl_conf['name'])
             logger.info('Process (%s/%s) %s counts observed' % (counter,
                                                       len(data_dict.keys()),
                                                       len(tags)))                   
@@ -81,11 +82,13 @@ class LabelHelper:
             print('New label (%s) :' % label)
             label = input()
 
+            buffers = []
             for tag in tags:
+                buffers.append([label, tag])
 
-                update = 'label="%s"' % label
-                where = 'tag="%s"' % tag
+            update = 'label=?'
+            where = 'tag=?'
 
-                db.update(update, where)
+            db.update_many(update, where, buffers)
 
             counter += 1    
