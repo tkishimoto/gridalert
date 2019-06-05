@@ -37,6 +37,10 @@ class ScanHelper:
 
         counter = 0
         args = []
+
+        for param in product(*params):
+            counter += 1
+
         for param in product(*params):
             for ii, value in enumerate(param):
                 self.conf.set(self.cluster,
@@ -51,7 +55,7 @@ class ScanHelper:
             args.append([param, conf_tmp, self.cluster])
 
         with Pool(int(self.cl_conf['scan_pool'])) as pool:
-            results = list(tqdm.tqdm(pool.imap(self.scan_wrapper, args), total=3))
+            results = list(tqdm.tqdm(pool.imap(self.scan_wrapper, args), total=counter))
 
         results_dict = {}
         for result in results:
