@@ -21,4 +21,12 @@ def base_match(cl_conf, cluster, host, date):
     match3 = (cl_conf['name'] == cluster)
 
     return match1 and match2 and match3
- 
+
+
+def base_match_wo_cluster(cl_conf, host, date):
+    match1 = re_list(host, cl_conf['hosts'].split(','))
+    match2 = util_date.in_sqdate('%s' % date,
+                                 cl_conf['date_start'],
+                                 cl_conf['date_end'])
+
+    return match1 and match2
