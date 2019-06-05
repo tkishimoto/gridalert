@@ -37,15 +37,8 @@ class LabelHelper:
    
     def label_sqlite3(self):
         db   = Sqlite3Helper(self.db_conf)
-        where = 'service="%s" and label="1"' % self.service
-        results = db.select(where=where)
-
-        fields = []
-        for result in results:
-            if util_match.base_match_wo_cluster(self.cl_conf,
-                                         result['host'],
-                                         result['date']):
-                fields.append(result)
+        where = 'service="%s"' % self.service
+        fields = db.select(where=where, base_match=self.cl_conf)
 
         data_dict = {} # {hash: [original, diff, label, [tags]]}
 
