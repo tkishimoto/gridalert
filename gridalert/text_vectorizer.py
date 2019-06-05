@@ -89,12 +89,17 @@ class TextVectorizer:
         trainings.close()
 
         cl_conf = self.cl_conf
+        verbose = 2
+        if int(cl_conf['loglevel']) <= 1:
+            verbose = 0
+
         model = train_unsupervised(text_path,
                         dim = int(cl_conf['vector_size']),
                         ws = int(cl_conf['vector_window']),
                         epoch = int(cl_conf['vector_epochs']),
                         minCount = int(cl_conf['vector_min_count']),
-                        thread = int(cl_conf['vector_workers']))
+                        thread = int(cl_conf['vector_workers']),
+                        verbose = verbose)
 
         model.save_model(self.model_path)
 

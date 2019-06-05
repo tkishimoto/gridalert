@@ -85,11 +85,18 @@ class VectorCluster:
         data = np.array(data)
 
         cl_conf = self.cl_conf
+
+        max_samples = int(cl_conf['cluster_max_samples'])
+
+        if max_samples > len(data):
+            max_samples = len(data)
+            logger.warn('max_samples set to %s' % len(data))
+
         model = IsolationForest(behaviour=cl_conf['cluster_behaviour'],
                                 n_estimators=int(cl_conf['cluster_n_estimators']),
                                 contamination=cl_conf['cluster_contamination'],
                                 random_state=int(cl_conf['cluster_random_state']),
-                                max_samples=int(cl_conf['cluster_max_samples']),
+                                max_samples=max_samples,
                                 n_jobs=int(cl_conf['cluster_n_jobs']))
         model.fit(data)
         pred_data = model.predict(data)
