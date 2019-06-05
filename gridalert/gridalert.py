@@ -48,7 +48,7 @@ class GridAlert:
                                                         value)) 
 
         # logger
-        basicConfig(level=const.LOG_LEVEL[int(default['DEFAULT']['loglevel'])],
+        basicConfig(level=const.LOG_LEVEL[int(default['DEFAULT']['log_level'])],
             format='%(asctime)s [%(levelname)-7s] %(message)s')
 
         self.clusters = []

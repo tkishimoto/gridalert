@@ -54,7 +54,6 @@ class PlotHelper:
 
 
     def get_data_from_doc2vec(self):
-
         db = Sqlite3Helper(self.db_conf)
         docs, tags = util_reader.get_data_from_sqlite3(db,
                                                       'service="%s"' % self.service,
@@ -94,7 +93,10 @@ class PlotHelper:
         conf = self.cl_conf
 
         ndim = len(data[0])
-        arbitrary_dim = len(conf['cluster_arbitrary_words'].split(','))
+        arbitrary_words = conf['cluster_arbitrary_words']
+        arbitrary_dim = 0
+        if arbitrary_words != '':
+            arbitrary_dim = len(arbitrary_words.split(','))
         vector_dim = ndim - arbitrary_dim
         data = np.array(data)
 
