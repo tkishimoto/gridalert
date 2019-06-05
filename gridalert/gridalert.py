@@ -1,4 +1,6 @@
 from logging import getLogger
+from logging import basicConfig
+
 logger = getLogger(__name__)
 
 import os
@@ -24,6 +26,7 @@ from .util import hash as util_hash
 class GridAlert:
 
     def __init__(self, conf='', options=''):
+
         cwd = Path(__file__).parent
 
         default = configparser.ConfigParser()
@@ -43,10 +46,13 @@ class GridAlert:
                         keys.split(':')[1], 
                         value) 
 
-            logger.info('%s:%s is overwritten to %s' % (keys.split(':')[0],
+            logger.warn('%s:%s is overwritten to %s' % (keys.split(':')[0],
                                                         keys.split(':')[1],
                                                         value)) 
 
+        # logger
+        basicConfig(level=const.LOG_LEVEL[int(default['DEFAULT']['loglevel'])],
+            format='%(asctime)s [%(levelname)-7s] %(message)s')
 
         self.clusters = []
 

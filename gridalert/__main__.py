@@ -1,12 +1,5 @@
 import argparse
-from logging import basicConfig, INFO
-
 from .gridalert import *
-
-# logger
-basicConfig(level=INFO,
-            format='%(asctime)s [%(levelname)-7s] %(message)s')
-
 
 def command_text(args):
     ga = GridAlert(args.conf, args.option)

@@ -1,5 +1,7 @@
+from logging import DEBUG, INFO, WARN, ERROR, CRITICAL
 
 class Const:
+    LOG_LEVEL = [CRITICAL, ERROR, WARN, INFO, DEBUG]
 
     NORMAL = 1
     ABNORMAL = -1
