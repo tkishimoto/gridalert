@@ -2,6 +2,8 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
+import time
+
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.doc2vec import TaggedDocument
 from fastText import train_unsupervised
@@ -26,12 +28,16 @@ class TextVectorizer:
         self.service    = ''
         self.model_path = ''
 
+        self.time = []
+
    
     def vectorize(self):
 
         for service in self.cl_conf['services'].split(','):
             self.service = service
             self.model_path = util_path.model_vec_path(self.cl_conf, service)
+
+            start = time.time()  
 
             db_type = self.db_conf['type']
             db_func = getattr(self, "get_data_from_%s" % (db_type), None)
@@ -41,7 +47,14 @@ class TextVectorizer:
             vector_func = getattr(self, "vectorize_%s" % (vector_type), None)
             vector_func(data, tags)
 
+            elapsed_time = time.time() - start
+            self.time.append({'service':service, 'time':elapsed_time})
+
  
+    def get_time(self):
+        return self.time
+
+
     def get_data_from_sqlite3(self):
  
         db = Sqlite3Helper(self.db_conf) 
@@ -104,11 +117,22 @@ class TextVectorizer:
             verbose = 0
 
         model = train_unsupervised(text_path,
+                        model = cl_conf['vector_model'],
+                        lr = float(cl_conf['vector_alpha']),
                         dim = int(cl_conf['vector_size']),
                         ws = int(cl_conf['vector_window']),
                         epoch = int(cl_conf['vector_epochs']),
                         minCount = int(cl_conf['vector_min_count']),
+                        minCountLabel = int(cl_conf['vector_min_count_label']),
+                        minn = int(cl_conf['vector_minn']),
+                        maxn = int(cl_conf['vector_maxn']),
+                        neg = int(cl_conf['vector_negative']),
+                        wordNgrams = int(cl_conf['vector_word_ngrams']),
+                        loss = cl_conf['vector_loss'],
+                        bucket = int(cl_conf['vector_bucket']),
+                        lrUpdateRate = int(cl_conf['vector_lr_update_rate']),
                         thread = int(cl_conf['vector_workers']),
+                        t = float(cl_conf['vector_sample']),
                         verbose = verbose)
 
         model.save_model(self.model_path)

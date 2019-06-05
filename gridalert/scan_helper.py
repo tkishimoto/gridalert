@@ -67,7 +67,11 @@ class ScanHelper:
 
             print('inf> ranking of %s' % key)
             for acc in acc_sort:
-                message = 'inf> acc (normal)=%s, acc (anomaly)=%s : ' % (acc['acc1'], acc['acc0'])
+                message = 'inf> acc (normal)=%s, acc (anomaly)=%s, ' % ('{:.3f}'.format(acc['acc1']),
+                                                                        '{:.3f}'.format(acc['acc0']))
+                message += 'time=%ss (%ss, %ss)' % ('{:.1f}'.format(acc['vector_time'] + acc['cluster_time']),
+                                                 '{:.1f}'.format(acc['vector_time']),
+                                                 '{:.1f}'.format(acc['cluster_time']))
 
                 print(message)
                 pprint.pprint(acc)
@@ -88,5 +92,14 @@ class ScanHelper:
         tv.vectorize()
         vc.clustering()
 
-        return vc.get_accuracy()
+        tv_time = tv.get_time()
+        vc_time = vc.get_time()
+
+        acc = []
+        for ii, acc_tmp in enumerate(vc.get_accuracy()):
+            acc_tmp['vector_time'] = tv_time[ii]['time']      
+            acc_tmp['cluster_time'] = vc_time[ii]['time']      
+            acc.append(acc_tmp)
+
+        return acc
 

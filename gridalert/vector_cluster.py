@@ -3,6 +3,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 import math
+import time
 import pickle
 import difflib
 import shelve
@@ -33,6 +34,8 @@ class VectorCluster:
         self.model_cls_path = ''
         self.model_result_path = ''
 
+        self.time       = []
+
         # scan db
         self.scan_db    = []
 
@@ -45,6 +48,8 @@ class VectorCluster:
             self.model_cls_path = util_path.model_cls_path(self.cl_conf, service)
             self.model_result_path = util_path.model_result_path(self.cl_conf, service)
 
+            start = time.time()
+
             vector_type = self.cl_conf['vector_type']
             vector_func = getattr(self, "get_data_from_%s" % (vector_type), None)
             data, tags = vector_func()
@@ -53,11 +58,17 @@ class VectorCluster:
             cluster_func = getattr(self, "cluster_%s" % (cluster_type), None)
             cluster_func(data, tags)
 
+            elapsed_time = time.time() - start
+            self.time.append({'service':service, 'time':elapsed_time})
+
             self.save_accuracy()
 
             if self.cl_conf['use_diff'] == 'True':
                 self.diff_anomaly()
 
+    def get_time(self):
+        return self.time
+  
 
     def get_data_from_doc2vec(self):
  
@@ -87,17 +98,40 @@ class VectorCluster:
         cl_conf = self.cl_conf
 
         max_samples = int(cl_conf['cluster_max_samples'])
+        contamination = cl_conf['cluster_contamination']
+        max_features = cl_conf['cluster_max_features']
+        bootstrap = cl_conf['cluster_bootstrap']
+        behaviour = cl_conf['cluster_behaviour']
 
         if max_samples > len(data):
             max_samples = len(data)
             logger.warn('max_samples set to %s' % len(data))
 
-        model = IsolationForest(behaviour=cl_conf['cluster_behaviour'],
-                                n_estimators=int(cl_conf['cluster_n_estimators']),
-                                contamination=cl_conf['cluster_contamination'],
-                                random_state=int(cl_conf['cluster_random_state']),
+        if contamination != 'auto':
+            contamination = float(contamination)
+
+        if max_features.isdigit():
+            max_features = int(max_features)
+        else:
+            max_features = float(max_features)
+
+        if bootstrap == 'True':
+            bootstrap = True
+        else:
+            bootstrap = False
+
+        # not allowed
+        if (contamination == 'auto') and (behaviour == 'old'):
+            return
+
+        model = IsolationForest(n_estimators=int(cl_conf['cluster_n_estimators']),
                                 max_samples=max_samples,
-                                n_jobs=int(cl_conf['cluster_n_jobs']))
+                                contamination=contamination,
+                                max_features=max_features,
+                                bootstrap=bootstrap,
+                                n_jobs=int(cl_conf['cluster_n_jobs']),
+                                behaviour=cl_conf['cluster_behaviour'],
+                                random_state=int(cl_conf['cluster_random_state']))
         model.fit(data)
         pred_data = model.predict(data)
 
@@ -112,6 +146,9 @@ class VectorCluster:
         cl_conf = self.cl_conf
         model = DBSCAN(eps=float(cl_conf['cluster_eps']),
                        min_samples=int(cl_conf['cluster_min_samples']),
+                       metric=cl_conf['cluster_metric'],
+                       algorithm=cl_conf['cluster_algorithm'],
+                       leaf_size=int(cl_conf['cluster_leaf_size']),
                        n_jobs=int(cl_conf['cluster_n_jobs']))
         model.fit(data)
         pred_data = model.labels_
