@@ -38,7 +38,14 @@ class LabelHelper:
     def label_sqlite3(self):
         db   = Sqlite3Helper(self.db_conf)
         where = 'service="%s"' % self.service
-        fields = db.select(where=where, base_match=self.cl_conf)
+        results = db.select(where=where)
+  
+        fields = []
+        for result in results:
+            if util_match.base_match_wo_cluster(self.cl_conf,
+                                         result['host'],
+                                         result['date']):
+                fields.append(result)
 
         data_dict = {} # {hash: [original, diff, label, [tags]]}
 
@@ -48,10 +55,7 @@ class LabelHelper:
             diff  = field['diff']
             label = field['label']
 
-            diff = diff.split('\n')[3:]
-            diff = '\n'.join(diff)
-
-            hash = util_hash.md5([diff])
+            hash = util_hash.md5([data])
 
             if hash in data_dict.keys():
                 data_dict[hash][3].append(tag)
