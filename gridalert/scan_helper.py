@@ -7,6 +7,7 @@ import sys
 import pickle
 import tqdm
 import pprint
+import shutil
 
 from io import StringIO
 from itertools import product
@@ -105,5 +106,7 @@ class ScanHelper:
             acc_tmp['cluster_time'] = vc_time[ii]['time']      
             acc.append(acc_tmp)
 
+        shutil.rmtree(conf[cluster]['model_dir'])       
+  
         return acc
 
