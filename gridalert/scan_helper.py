@@ -47,9 +47,8 @@ class ScanHelper:
                 self.conf.set(self.cluster,
                               const.MLPARAMS[ii],
                               value)
-            hash = util_hash.md5(param)
+            hash = util_hash.md5([self.cluster] + list(param))
             hash_dir = self.cl_conf['base_dir'] + '/' + hash
-            os.makedirs(hash_dir, exist_ok=True)
             self.conf.set(self.cluster, 'model_dir', hash_dir)
             rep = pickle.dumps(self.conf)
             conf_tmp = pickle.loads(rep)
@@ -90,6 +89,8 @@ class ScanHelper:
         for ii, value in enumerate(param):
             key = const.MLPARAMS[ii]
             logger.info('%s : %s' % (key, conf[cluster][key]))
+
+        os.makedirs(conf[cluster]['model_dir'], exist_ok=True)
 
         tv = TextVectorizer(conf, cluster)
         vc = VectorCluster(conf, cluster)
