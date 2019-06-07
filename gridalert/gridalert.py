@@ -11,7 +11,6 @@ from .data_converter import *
 from .label_helper import *
 from .text_vectorizer import *
 from .vector_cluster import *
-from .plot_helper import *
 from .data_visualizer import *
 from .html_helper import *
 from .anomaly_alert import *
@@ -93,8 +92,9 @@ class GridAlert:
 
     def plot(self):
         for cluster in self.clusters:
-            ph = PlotHelper(self.conf, cluster)
-            ph.plot()
+            aa = AnomalyAlert(self.conf, cluster)
+            aa.predict()
+            aa.plot()
 
  
     def html(self):
