@@ -20,6 +20,7 @@ def get_data_from_doc2vec(model_path, docs, cl_conf):
     # return data and tag from doc2vec model
 
     model = Doc2Vec.load(model_path) 
+    model.random.seed(int(cl_conf['vector_seed']))
     arbitrary_words = cl_conf['cluster_arbitrary_words'].split(',')
 
     data = [] 
@@ -27,6 +28,7 @@ def get_data_from_doc2vec(model_path, docs, cl_conf):
         tmp_doc = doc.replace('\n', '').split()
 
         vector = model.infer_vector(tmp_doc).tolist()
+        model.random.seed(int(cl_conf['vector_seed']))
 
         for arbitrary_word in arbitrary_words:
             if arbitrary_word == '':

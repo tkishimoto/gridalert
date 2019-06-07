@@ -193,14 +193,15 @@ class VectorCluster:
             prediction = pred_data[ii]
             buffers.append([str(prediction), feature, tag])
 
-        update = 'prediction=?,feature=?'
-        where = 'tag=?'
+        if self.cl_conf['use_prediction'] == 'True':
+            update = 'prediction=?,feature=?'
+            where = 'tag=?'
 
-        db = Sqlite3Helper(self.db_conf)
-        db.create_table()
+            db = Sqlite3Helper(self.db_conf)
+            db.create_table()
 
-        db.update_many(update, where, buffers)
-        db.close()
+            db.update_many(update, where, buffers)
+            db.close()
 
         # shelve
         shelve_db = shelve.open(self.model_result_path)

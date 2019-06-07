@@ -59,6 +59,17 @@ class AnomalyAlert:
 
             self.predictions.append(pred_dict)
 
+            buffers = []
+            for tag, pred in zip(tags, pred_data):
+                buffers.append([str(pred), tag]) 
+            
+            update = 'prediction=?'
+            where = 'tag=?'
+
+            db = Sqlite3Helper(self.db_conf)
+            db.update_many(update, where, buffers)
+            db.close()
+
 
     def plot(self):
         for prediction in self.predictions:

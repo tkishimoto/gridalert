@@ -1,5 +1,8 @@
+import os
 import argparse
 from .gridalert import *
+
+os.environ['PYTHONHASHSEED'] = '0'
 
 def command_text(args):
     ga = GridAlert(args.conf, args.option)
