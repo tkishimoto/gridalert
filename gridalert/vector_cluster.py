@@ -78,6 +78,7 @@ class VectorCluster:
                                                        self.cl_conf)
   
         data = util_reader.get_data_from_doc2vec(self.model_vec_path, docs, self.cl_conf)
+        db.close()
         return data, tags
 
 
@@ -89,6 +90,7 @@ class VectorCluster:
                                                        self.cl_conf)
  
         data = util_reader.get_data_from_fasttext(self.model_vec_path, docs, self.cl_conf)
+        db.close()
         return data, tags
 
 
@@ -198,6 +200,7 @@ class VectorCluster:
         db.create_table()
 
         db.update_many(update, where, buffers)
+        db.close()
 
         # shelve
         shelve_db = shelve.open(self.model_result_path)
@@ -228,6 +231,8 @@ class VectorCluster:
 
                 if shelve_db[key]['prediction'] == str(const.ABNORMAL):
                     num0 += 1
+
+            db.close()
 
         acc0 = '0'
         acc1 = '0'
@@ -310,3 +315,4 @@ class VectorCluster:
 
         db = Sqlite3Helper(self.db_conf)
         db.update_many(update, where, buffers)
+        db.close()
