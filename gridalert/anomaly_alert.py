@@ -67,6 +67,83 @@ class AnomalyAlert:
                                  prediction['pred_data'])
 
 
+    def alert(self):
+        contents = ''
+
+        for prediction in self.predictions:
+            diff = self.get_anomaly_diff(prediction['tags'], 
+                                 prediction['pred_data'])
+
+            if not diff:
+                continue
+
+            contents += 'cluster ID: %s\n' % self.cl_conf['name']
+            contents += 'target hosts: %s\n' % self.cl_conf['hosts']
+            contents += 'target service: %s\n\n' % prediction['service']
+            contents += diff
+            contents += '\n\n'
+
+        return contents
+
+ 
+    def alert_anomaly(self, contents):
+        if not contents:
+            logger.info('No anomaly events are observed')
+            return
+
+        message  = 'This is a test system to detect anomaly events in logwatch outputs\n'
+        message += 'using Machine Learning technologies.\n\n'
+
+        message += 'Anomaly events have been detected. Differences are:\n\n'
+
+        message += contents
+
+        message += '\n'
+        message += 'The following hosts and servides are currently monitored:\n\n'
+
+        for name in self.conf['DEFAULT']['clusters'].split(','):
+            message += '* %s\n' % self.conf[name]['hosts']
+
+            for service in self.conf[name]['services'].split(','):
+                message += ' - %s\n' % service
+
+        if self.conf['alert']['to_address'] == 'dummy':
+            print (message)
+
+        else:
+            subject = 'Logwatch alert: anomaly events detected'
+            msg = MIMEText(message)
+            msg['Subject'] = subject
+            msg['From']    = self.conf['alert']['from_address']
+            msg['To']      = self.conf['alert']['to_address']
+
+            smtp = smtplib.SMTP()
+            smtp.connect()
+            smtp.sendmail(self.conf['alert']['from_address'], self.conf['alert']['to_address'], msg.as_string())
+
+            smtp.close()
+
+
+    def get_anomaly_diff(self, tags, pred_data):
+        diff = ''
+        db = Sqlite3Helper(self.db_conf)
+
+        for tag, pred in zip(tags, pred_data):
+            if pred != int(const.ABNORMAL):
+                continue
+             
+            where = 'tag="%s"' % (tag)
+            field = db.select(where, self.cl_conf)[0]
+        
+            if not field['diff']:
+                continue
+            
+            diff += field['diff'] 
+            diff += '\n\n'
+          
+        return diff
+
+
     def get_data_from_doc2vec(self):
         db = Sqlite3Helper(self.db_conf)
         docs, tags = util_reader.get_data_from_sqlite3(db,

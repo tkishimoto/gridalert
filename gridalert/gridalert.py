@@ -122,6 +122,11 @@ class GridAlert:
 
 
     def alert(self):
-        aa = AnomalyAlert(self.conf)
-        aa.send_mail()
+        contents = ''
 
+        for cluster in self.clusters:
+            aa = AnomalyAlert(self.conf, cluster)
+            aa.predict()
+            contents += aa.alert()
+
+        aa.alert_anomaly(contents)
