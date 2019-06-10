@@ -200,6 +200,9 @@ class AnomalyAlert:
         if arbitrary_words != '':
             arbitrary_dim = len(arbitrary_words.split(','))
         vector_dim = ndim - arbitrary_dim
+        if conf['cluster_count_int'] == 'True':
+            vector_dim -= 1
+
         data = np.array(data)
 
         fig, axes = plt.subplots(nrows=ndim, ncols=ndim)
@@ -237,12 +240,16 @@ class AnomalyAlert:
 
                 if (iy == (ndim-1)):
                     label = 'Feature %s' % ix
-                    if (ix+1) > vector_dim:
+                    if (ix+1) > (vector_dim + arbitrary_dim):
+                        label = 'Int counter'
+                    elif (ix+1) > vector_dim:
                         label = 'Arbitrary %s' % (ix-vector_dim)
                     axes[iy][ix].set_xlabel(label)
                 if (ix == (0)):
                     label = 'Feature %s' % iy
-                    if (iy+1) > vector_dim:
+                    if (iy+1) > (vector_dim + arbitrary_dim):
+                        label = 'Int counter'
+                    elif (iy+1) > vector_dim:
                         label = 'Arbitrary %s' % (iy-vector_dim)
                     axes[iy][ix].set_ylabel(label)
 

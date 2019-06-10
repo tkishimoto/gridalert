@@ -2,6 +2,8 @@ from gensim.models.doc2vec import Doc2Vec
 from fastText import load_model
 from sklearn import preprocessing
 
+from . import text  as util_text
+
 def get_data_from_sqlite3(db, where, cl_conf):
 
     data = []
@@ -35,6 +37,10 @@ def get_data_from_doc2vec(model_path, docs, cl_conf):
                 continue             
 
             vector.append(doc.count(arbitrary_word))
+
+        if cl_conf['cluster_count_int'] == 'True':
+            counter = util_text.count_int(doc)  
+            vector.append(counter)
 
         data.append(vector)
 
@@ -77,6 +83,10 @@ def get_data_from_fasttext(model_path, docs, cl_conf):
                 continue             
 
             vector.append(doc.count(arbitrary_word))
+
+        if cl_conf['cluster_count_int'] == 'True':
+            counter = util_text.count_int(doc)  
+            vector.append(counter)
 
         data.append(vector)
 

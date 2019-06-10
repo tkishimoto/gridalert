@@ -66,3 +66,17 @@ def filter_doc(doc):
 
     return ' '.join(filtered)
 
+
+def count_int(doc):
+
+    tmp_doc = doc.replace('\n', '').split()
+ 
+    counter = 0
+
+    for word in tmp_doc:
+        if word.isdigit():
+            counter += int(word)
+
+    return counter
+
+
