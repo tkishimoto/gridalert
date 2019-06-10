@@ -34,7 +34,10 @@ class GridAlert:
             else:
                 default.read('%s/%s' % (Path.cwd(), conf))
                     
-        for option in options.split():
+        for option in options.split(','):
+            if not '=' in option:
+                continue
+
             keys = option.split('=')[0]
             value = option.split('=')[1]
         
