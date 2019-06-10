@@ -60,7 +60,7 @@ def filter_doc(doc):
     words = doc.split()
     for word in words:
         if word.isdigit():
-            word = num_to_word(int(word))
+            word = word + ' ' + num_to_word(int(word))
 
         filtered.append(word)
 
