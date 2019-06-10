@@ -70,7 +70,8 @@ class TextVectorizer:
         trainings = []       
         for doc, tag in zip(data, tags):
 
-            doc = util_text.filter_doc(doc)
+            if self.cl_conf['vector_jp_num'] = 'True':
+                doc = util_text.filter_doc(doc)
 
             trainings.append(TaggedDocument(words=doc.split(), 
                              tags=[tag]))
@@ -106,7 +107,8 @@ class TextVectorizer:
 
         for doc, tag in zip(data, tags):
 
-            doc = util_text.filter_doc(doc)
+            if self.cl_conf['vector_jp_num'] = 'True':
+                doc = util_text.filter_doc(doc)
 
             trainings.write('%s\n' % doc)
 
