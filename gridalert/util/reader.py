@@ -42,6 +42,9 @@ def get_data_from_doc2vec(model_path, docs, cl_conf):
             counter = util_text.count_int(doc)  
             vector.append(counter)
 
+        if cl_conf['cluster_count_word'] == 'True':
+            vector.append(len(tmp_doc))
+
         data.append(vector)
 
     if cl_conf['cluster_normalize'] == 'True':
@@ -87,6 +90,9 @@ def get_data_from_fasttext(model_path, docs, cl_conf):
         if cl_conf['cluster_count_int'] == 'True':
             counter = util_text.count_int(doc)  
             vector.append(counter)
+
+        if cl_conf['cluster_count_word'] == 'True':
+            vector.append(len(tmp_doc))
 
         data.append(vector)
 
