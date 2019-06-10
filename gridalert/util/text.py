@@ -72,10 +72,23 @@ def count_int(doc):
     tmp_doc = doc.replace('\n', '').split()
  
     counter = 0
+    flag = False
+    tmp_counter = 0
 
     for word in tmp_doc:
+        if flag == True:
+            flag = False
+
+            if ('Time' in word) or ('time' in word):
+                counter += tmp_counter
+
+            if ('Count' in word) or ('count' in word):
+                counter += tmp_counter
+            tmp_counter = 0
+
         if word.isdigit():
-            counter += int(word)
+            flag = True
+            tmp_counter = int(word)
 
     return counter
 
