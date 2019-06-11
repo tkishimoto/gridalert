@@ -10,6 +10,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+from sklearn.externals import joblib
+
 from .sqlite3_helper import *
 from .util import reader as util_reader
 from .util import path as util_path
@@ -28,6 +30,7 @@ class AnomalyAlert:
         self.service   = ''
         self.model_vec_path   = ''
         self.model_cls_path   = ''
+        self.model_scl_path   = ''
 
         self.plot_path     = ''
 
@@ -42,12 +45,12 @@ class AnomalyAlert:
             self.service = service
             self.model_vec_path = util_path.model_vec_path(self.cl_conf, service)
             self.model_cls_path = util_path.model_cls_path(self.cl_conf, service)
+            self.model_scl_path = util_path.model_scl_path(self.cl_conf, service)
             self.plot_path = util_path.plot_path(self.cl_conf, service)
 
             vector_type = self.cl_conf['vector_type']
             vector_func = getattr(self, "get_data_from_%s" % (vector_type), None)
             data, tags = vector_func()
-
             cluster_type = self.cl_conf['cluster_type']
             cluster_func = getattr(self, "predict_%s" % (cluster_type), None)
             pred_data = cluster_func(data)
@@ -147,6 +150,11 @@ class AnomalyAlert:
             if pred != int(const.ABNORMAL):
                 continue
              
+            counter += 1
+          
+            if counter > 3:
+                continue
+
             where = 'tag="%s"' % (tag)
             field = db.select(where, self.cl_conf)[0]
         
@@ -156,12 +164,10 @@ class AnomalyAlert:
             diff += field['diff'] 
             diff += '\n\n'
 
-            counter += 1
-          
-            if counter >= 3:
-                diff += 'There are other %s events.' % (len(pred_data) - 3)
-                diff += '\n\n'
-                break
+
+        if counter > 3:
+            diff += 'There are other %s events.' % (counter - 3)
+            diff += '\n\n'
 
         return diff
 
@@ -173,6 +179,11 @@ class AnomalyAlert:
                                                        self.cl_conf)
 
         data = util_reader.get_data_from_doc2vec(self.model_vec_path, docs, self.cl_conf)
+
+        if self.cl_conf['cluster_normalize'] == 'True':
+            mm = joblib.load(self.model_scl_path)
+            data = mm.transform(data).tolist()
+
         return data, tags
 
 
@@ -184,6 +195,11 @@ class AnomalyAlert:
                                                        self.cl_conf)
 
         data = util_reader.get_data_from_fasttext(self.model_vec_path, docs, self.cl_conf)
+
+        if self.cl_conf['cluster_normalize'] == 'True':
+            mm = joblib.load(self.model_scl_path)
+            data = mm.transform(data).tolist()
+
         return data, tags
 
     def predict_isolationforest(self, data):

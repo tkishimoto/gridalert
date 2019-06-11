@@ -1,6 +1,5 @@
 from gensim.models.doc2vec import Doc2Vec
 from fastText import load_model
-from sklearn import preprocessing
 
 from . import text  as util_text
 
@@ -47,10 +46,6 @@ def get_data_from_doc2vec(model_path, docs, cl_conf):
 
         data.append(vector)
 
-    if cl_conf['cluster_normalize'] == 'True':
-        mm = preprocessing.MinMaxScaler()
-        data = mm.fit_transform(data).tolist()
-
     return data
 
     #model = Doc2Vec.load(model_path)
@@ -96,10 +91,6 @@ def get_data_from_fasttext(model_path, docs, cl_conf):
 
         data.append(vector)
 
-    if cl_conf['cluster_normalize'] == 'True':
-        mm = preprocessing.MinMaxScaler()
-        data = mm.fit_transform(data).tolist()
-    
     return data
 
 

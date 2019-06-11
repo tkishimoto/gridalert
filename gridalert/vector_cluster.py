@@ -13,6 +13,8 @@ from pprint import pformat
 from gensim.models.doc2vec import Doc2Vec
 from sklearn.ensemble import IsolationForest
 from sklearn.cluster import DBSCAN
+from sklearn import preprocessing
+from sklearn.externals import joblib
 
 from .sqlite3_helper import *
 from .util import reader as util_reader
@@ -32,6 +34,7 @@ class VectorCluster:
         self.service    = ''
         self.model_vec_path = ''
         self.model_cls_path = ''
+        self.model_scl_path = ''
         self.model_result_path = ''
 
         self.time       = []
@@ -46,6 +49,7 @@ class VectorCluster:
             self.service = service
             self.model_vec_path = util_path.model_vec_path(self.cl_conf, service)
             self.model_cls_path = util_path.model_cls_path(self.cl_conf, service)
+            self.model_scl_path = util_path.model_scl_path(self.cl_conf, service)
             self.model_result_path = util_path.model_result_path(self.cl_conf, service)
 
             start = time.time()
@@ -78,6 +82,12 @@ class VectorCluster:
                                                        self.cl_conf)
   
         data = util_reader.get_data_from_doc2vec(self.model_vec_path, docs, self.cl_conf)
+
+        if self.cl_conf['cluster_normalize'] == 'True':
+            mm = preprocessing.MinMaxScaler()
+            data = mm.fit_transform(data).tolist()
+            joblib.dump(mm, self.model_scl_path) 
+
         db.close()
         return data, tags
 
@@ -90,6 +100,12 @@ class VectorCluster:
                                                        self.cl_conf)
  
         data = util_reader.get_data_from_fasttext(self.model_vec_path, docs, self.cl_conf)
+
+        if self.cl_conf['cluster_normalize'] == 'True':
+            mm = preprocessing.MinMaxScaler()
+            data = mm.fit_transform(data).tolist()
+            joblib.dump(mm, self.model_scl_path) 
+
         db.close()
         return data, tags
 
