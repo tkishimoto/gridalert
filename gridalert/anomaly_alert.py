@@ -17,6 +17,9 @@ from .util import reader as util_reader
 from .util import path as util_path
 from .const import Const as const
 
+import smtplib
+from email.mime.text import MIMEText
+
 class AnomalyAlert:
 
     def __init__(self, conf, cluster):
@@ -91,12 +94,12 @@ class AnomalyAlert:
             if not diff:
                 continue
 
-            contents += '****\n'
+            contents += '**********************************************************************\n'
             contents += 'cluster ID: %s\n' % self.cl_conf['name']
             contents += 'target hosts: %s\n' % self.cl_conf['hosts']
-            contents += 'target service: %s\n\n' % prediction['service']
+            contents += 'target service: %s\n' % prediction['service']
+            contents += '**********************************************************************\n'
             contents += diff
-            contents += '****\n'
             contents += '\n\n'
 
         return contents
@@ -160,9 +163,11 @@ class AnomalyAlert:
         
             if not field['diff']:
                 continue
-            
+
+            diff += '======================================================================\n'            
             diff += field['diff'] 
             diff += '\n\n'
+            diff += '======================================================================\n'            
 
 
         if counter > 3:
