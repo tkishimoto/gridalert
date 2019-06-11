@@ -139,6 +139,8 @@ class AnomalyAlert:
         diff = ''
         db = Sqlite3Helper(self.db_conf)
 
+        counter = 0
+
         for tag, pred in zip(tags, pred_data):
             if pred != int(const.ABNORMAL):
                 continue
@@ -151,7 +153,13 @@ class AnomalyAlert:
             
             diff += field['diff'] 
             diff += '\n\n'
+
+            counter += 1
           
+            if counter >= 3:
+                diff += 'There are other %s events.' % (len(pred_data) - 3)
+                diff += '\n\n'
+
         return diff
 
 
