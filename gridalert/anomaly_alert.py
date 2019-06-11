@@ -88,10 +88,12 @@ class AnomalyAlert:
             if not diff:
                 continue
 
+            contents += '****\n'
             contents += 'cluster ID: %s\n' % self.cl_conf['name']
             contents += 'target hosts: %s\n' % self.cl_conf['hosts']
             contents += 'target service: %s\n\n' % prediction['service']
             contents += diff
+            contents += '****\n'
             contents += '\n\n'
 
         return contents
@@ -159,6 +161,7 @@ class AnomalyAlert:
             if counter >= 3:
                 diff += 'There are other %s events.' % (len(pred_data) - 3)
                 diff += '\n\n'
+                break
 
         return diff
 
