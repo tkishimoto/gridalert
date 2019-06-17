@@ -14,7 +14,8 @@ from gensim.models.doc2vec import Doc2Vec
 from sklearn.ensemble import IsolationForest
 from sklearn.cluster import DBSCAN
 from sklearn import preprocessing
-from sklearn.externals import joblib
+#from sklearn.externals import joblib
+import joblib
 
 from .sqlite3_helper import *
 from .util import reader as util_reader
@@ -294,11 +295,14 @@ class VectorCluster:
         db.close()
 
 
-        center = {}
+        center = fields[0]
         distance = const.INVALID
 
         for field in fields:
             feature = field['feature']
+
+            if not 'distance' in feature: 
+                continue
 
             data = {}
             for index in feature.split(','):

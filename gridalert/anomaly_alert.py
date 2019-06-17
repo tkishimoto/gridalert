@@ -10,7 +10,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from sklearn.externals import joblib
+#from sklearn.externals import joblib
+import joblib
 
 from .sqlite3_helper import *
 from .util import reader as util_reader
@@ -54,10 +55,10 @@ class AnomalyAlert:
             vector_type = self.cl_conf['vector_type']
             vector_func = getattr(self, "get_data_from_%s" % (vector_type), None)
             data, tags = vector_func()
+
             cluster_type = self.cl_conf['cluster_type']
             cluster_func = getattr(self, "predict_%s" % (cluster_type), None)
             pred_data = cluster_func(data)
-   
             pred_dict = {'service': service,
                          'data': data,
                          'tags': tags,
@@ -79,6 +80,7 @@ class AnomalyAlert:
 
     def plot(self):
         for prediction in self.predictions:
+            self.plot_path = util_path.plot_path(self.cl_conf, prediction['service'])
             self.plot_clustering(prediction['data'], 
                                  prediction['tags'], 
                                  prediction['pred_data'])
@@ -88,18 +90,32 @@ class AnomalyAlert:
         contents = ''
 
         for prediction in self.predictions:
-            diff = self.get_anomaly_diff(prediction['tags'], 
-                                 prediction['pred_data'])
+            messages = ''
 
-            if not diff:
-                continue
+            if self.cl_conf['use_diff'] == 'True':
+                messages = self.get_anomaly_diff(prediction['tags'], 
+                                 prediction['pred_data'])
+                if not messages:
+                    continue
+
+            else:
+                messages = self.get_anomaly(prediction['tags'], 
+                                 prediction['pred_data'])
+                if not messages:
+                    continue
 
             contents += '**********************************************************************\n'
             contents += 'cluster ID: %s\n' % self.cl_conf['name']
             contents += 'target hosts: %s\n' % self.cl_conf['hosts']
             contents += 'target service: %s\n' % prediction['service']
             contents += '**********************************************************************\n'
-            contents += diff
+            if self.cl_conf['use_diff'] == 'True':
+                contents += '\n'
+                contents += 'Differences are shown below.\n'
+            else:
+                contents += '\n'
+                contents += 'Anomaly messages are shown below.\n'
+            contents += messages
             contents += '\n\n'
 
         return contents
@@ -113,7 +129,7 @@ class AnomalyAlert:
         message  = 'This is a test system to detect anomaly events in logwatch outputs\n'
         message += 'using Machine Learning technologies.\n\n'
 
-        message += 'Anomaly events have been detected. Differences are:\n\n'
+        message += 'Anomaly events have been detected.\n\n'
 
         message += contents
 
@@ -141,6 +157,37 @@ class AnomalyAlert:
             smtp.sendmail(self.conf['alert']['from_address'], self.conf['alert']['to_address'], msg.as_string())
 
             smtp.close()
+
+
+    def get_anomaly(self, tags, pred_data):
+        diff = ''
+        db = Sqlite3Helper(self.db_conf)
+
+        counter = 0
+
+        for tag, pred in zip(tags, pred_data):
+            if pred != int(const.ABNORMAL):
+                continue
+             
+            counter += 1
+          
+            if counter > 5:
+                continue
+
+            where = 'tag="%s"' % (tag)
+            field = db.select(where, self.cl_conf)[0]
+        
+            diff += '======================================================================\n'            
+            diff += field['date'] + ' ' + field['host']
+            diff += field['data'] 
+            diff += '\n\n'
+            diff += '======================================================================\n'            
+
+        if counter > 5:
+            diff += 'There are other %s events.' % (counter - 5)
+            diff += '\n\n'
+
+        return diff
 
 
     def get_anomaly_diff(self, tags, pred_data):
@@ -238,7 +285,6 @@ class AnomalyAlert:
             vector_dim -= 1
 
         data = np.array(data)
-
         fig, axes = plt.subplots(nrows=ndim, ncols=ndim)
 
         for ix in range(ndim):

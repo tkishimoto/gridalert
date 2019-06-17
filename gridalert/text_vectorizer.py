@@ -58,6 +58,7 @@ class TextVectorizer:
     def get_data_from_sqlite3(self):
  
         db = Sqlite3Helper(self.db_conf) 
+        print (self.service)
         data, tags = util_reader.get_data_from_sqlite3(db, 
                                                       'service="%s"' % self.service,
                                                        self.cl_conf)
