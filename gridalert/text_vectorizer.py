@@ -43,6 +43,10 @@ class TextVectorizer:
             db_func = getattr(self, "get_data_from_%s" % (db_type), None)
             data, tags = db_func()
 
+            if len(data) == 0:
+                logger.info('No data are selected.')
+                return
+
             vector_type = self.cl_conf['vector_type']
             vector_func = getattr(self, "vectorize_%s" % (vector_type), None)
             vector_func(data, tags)
@@ -58,7 +62,6 @@ class TextVectorizer:
     def get_data_from_sqlite3(self):
  
         db = Sqlite3Helper(self.db_conf) 
-        print (self.service)
         data, tags = util_reader.get_data_from_sqlite3(db, 
                                                       'service="%s"' % self.service,
                                                        self.cl_conf)
@@ -104,7 +107,7 @@ class TextVectorizer:
 
         text_path = self.cl_conf['model_dir'] + '/fasttext.tmp'
 
-        trainings = open(text_path, 'w')
+        trainings = open(text_path, 'w', errors='replace')
 
         for doc, tag in zip(data, tags):
 
