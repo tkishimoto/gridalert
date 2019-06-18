@@ -19,13 +19,16 @@ def get_data_from_sqlite3(db, where, cl_conf):
 
 def get_data_from_doc2vec(model_path, docs, cl_conf):
     # return data and tag from doc2vec model
-
     model = Doc2Vec.load(model_path) 
     model.random.seed(int(cl_conf['vector_seed']))
     arbitrary_words = cl_conf['cluster_arbitrary_words'].split(',')
 
     data = [] 
     for doc in docs:
+
+        if cl_conf['vector_jp_num'] == 'True':
+            doc = util_text.filter_doc(doc)
+
         tmp_doc = doc.replace('\n', '').split()
 
         vector = model.infer_vector(tmp_doc).tolist()
@@ -45,7 +48,6 @@ def get_data_from_doc2vec(model_path, docs, cl_conf):
             vector.append(len(tmp_doc))
 
         data.append(vector)
-
     return data
 
     #model = Doc2Vec.load(model_path)
@@ -72,6 +74,9 @@ def get_data_from_fasttext(model_path, docs, cl_conf):
 
     data = [] 
     for doc in docs:
+        if cl_conf['vector_jp_num'] == 'True':
+            doc = util_text.filter_doc(doc)
+
         tmp_doc = doc.replace('\n', '')
 
         vector = model.get_sentence_vector(tmp_doc).tolist()
