@@ -9,6 +9,10 @@ import tqdm
 import pprint
 import shutil
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 from io import StringIO
 from itertools import product
 from multiprocessing import Pool
@@ -18,6 +22,7 @@ from .vector_cluster import *
 
 from .const import Const as const
 from .util import hash as util_hash
+from .util import path as util_path
 
 class ScanHelper:
 
@@ -68,18 +73,36 @@ class ScanHelper:
 
         for key, value in results_dict.items():
             acc_sort = sorted(value, key=lambda x:-x['sort'])
+            plot_acc0 = []
+            plot_acc1 = []
+            plot_x    = []
+            counters  = 1
 
             print('inf> ranking of %s' % key)
             for acc in acc_sort:
+                plot_acc0.append(acc['acc0'])
+                plot_acc1.append(acc['acc1'])
+                plot_x.append(counters) 
+
                 message = 'inf> acc (normal)=%s, acc (anomaly)=%s, ' % ('{:.3f}'.format(acc['acc1']),
                                                                         '{:.3f}'.format(acc['acc0']))
                 message += 'time=%ss (%ss, %ss)' % ('{:.1f}'.format(acc['vector_time'] + acc['cluster_time']),
                                                  '{:.1f}'.format(acc['vector_time']),
                                                  '{:.1f}'.format(acc['cluster_time']))
-
+                counters += 1
                 print(message)
                 pprint.pprint(acc)
 
+            plt.plot(plot_x, plot_acc0, label='Accuracy of anomaly events', marker='o')
+            plt.plot(plot_x, plot_acc1, label='Accuracy of normal events', marker='o')
+            plt.xlabel('Ranking of hyper parameters')
+            plt.ylabel('Accuracies')
+            plt.grid(True)
+            plt.legend(loc = 'upper right')
+
+
+            plot_path = util_path.plot_scan_path(self.cl_conf, key)
+            plt.savefig(plot_path) 
 
     def scan_wrapper(self, args):
         return self.scan_process(*args)

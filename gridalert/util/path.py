@@ -32,3 +32,10 @@ def plot_path(cl_conf, service):
                                  cl_conf['vector_type'],
                                  cl_conf['cluster_type'])
     return cl_conf['plot_dir'] + '/' + plot
+
+def plot_scan_path(cl_conf, service):
+    plot = '%s.%s.%s.%s.scan.png' % (cl_conf['name'],
+                                 service,
+                                 cl_conf['vector_type'],
+                                 cl_conf['cluster_type'])
+    return cl_conf['plot_dir'] + '/' + plot
