@@ -9,6 +9,7 @@ from gensim.models.doc2vec import TaggedDocument
 from fastText import train_unsupervised
 
 from .sqlite3_helper import *
+from .scdv_helper import *
 
 from .util import text as util_text
 from .util import reader as util_reader
@@ -144,3 +145,10 @@ class TextVectorizer:
 
         model.save_model(self.model_path)
 
+ 
+    def vectorize_scdvword2vec(self, data, tags):
+
+        scdv = ScdvHelper(self.conf, self.cluster)
+        model = scdv.word2vec(data)
+        model.save(self.model_path.replace('.model', '.word2vec.model'))  
+        return
