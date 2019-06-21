@@ -156,5 +156,6 @@ class TextVectorizer:
         for key,value in dict.items():
             shelve_db[key] = value
         shelve_db.close()
+        dict = scdv.get_vector(data, self.model_path, True)
 
         return

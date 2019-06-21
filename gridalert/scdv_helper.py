@@ -4,6 +4,7 @@ logger = getLogger(__name__)
 
 import numpy as np
 
+import shelve
 from gensim.models import Word2Vec
 from sklearn.mixture import GaussianMixture
 from sklearn.feature_extraction.text import TfidfVectorizer,HashingVectorizer
@@ -79,18 +80,29 @@ class ScdvHelper:
         return shelve_dict
 
 
-    def get_vector(self, data):
-        gwbowv = np.zeros(data, 
-                          self.num_clusters*serlf.num_features, 
-                          dtype="float32")
+    def get_vector(self, data, model_path, train=False):
+        gwbowv = np.zeros((len(data), self.num_clusters*self.num_features), 
+                          dtype='float32')
   
         counter = 0
         min_no = 0
         max_no = 0
 
         for doc in data:
-            gwbowv[counter] = create_cluster_vector_and_gwbowv(doc.split(), train=True)
+            min_no, max_no, gwbowv[counter] = self.create_cluster_vector_and_gwbowv(doc.split(), model_path, train=train)
             counter += 1
+
+        percentage = 0.04
+        min_no = min_no*1.0/len(data)
+        max_no = max_no*1.0/len(data)
+        thres = (abs(max_no) + abs(min_no))/2
+        thres = thres*percentage
+
+        temp = abs(gwbowv) < thres
+        gwbowv[temp] = 0
+
+        print (gwbowv)
+
 
     def cluster_GMM(self, num_clusters, word_vectors):
         clf =  GaussianMixture(n_components=num_clusters,
@@ -108,7 +120,7 @@ class ScdvHelper:
 
         prob_wordvecs = {}
         for word in word_centroid_map:
-            prob_wordvecs[word] = np.zeros(self.num_clusters * self.num_features, dtype="float32" )
+            prob_wordvecs[word] = np.zeros(self.num_clusters * self.num_features, dtype='float32')
             for index in range(0, num_clusters):
                 try:
                     prob_wordvecs[word][index*num_features:(index+1)*num_features] = model[word] * word_centroid_prob_map[word][index] * word_idf_dict[word]
@@ -118,7 +130,29 @@ class ScdvHelper:
         return prob_wordvecs
 
 
-    def create_cluster_vector_and_gwbowv(wordlist, train=False):
+    def create_cluster_vector_and_gwbowv(self, wordlist, model_path, train):
+        model = shelve.open(model_path) 
+
         bag_of_centroids = np.zeros(self.num_clusters * self.num_features, dtype="float32")
 
+        for word in wordlist:
+            try:
+                temp = model['word_id_map'][word]
+            except:
+                continue
 
+        bag_of_centroids += model['prob_wordvecs'][word]
+
+        norm = np.sqrt(np.einsum('...i,...i', bag_of_centroids, bag_of_centroids))
+        if(norm!=0):
+            bag_of_centroids /= norm
+ 
+        min_no = 0
+        max_no = 0
+
+        if train:
+            min_no += min(bag_of_centroids)
+            max_no += max(bag_of_centroids)
+
+        model.close() 
+        return min_no, max_no, bag_of_centroids
