@@ -28,14 +28,12 @@ class ScdvHelper:
     def create_model(self, data):
 
         docs_list = []
-        docs      = []
 
         for doc in data:
             if self.cl_conf['vector_jp_num'] == 'True':
                 doc = util_text.filter_doc(doc)
 
             docs_list.append(doc.split())
-            docs.append(doc)
 
         cl_conf = self.cl_conf
         model = Word2Vec(docs_list, 
@@ -58,8 +56,10 @@ class ScdvHelper:
         word_id_map = dict(zip(model.wv.index2word, idx))
         word_prob_map = dict(zip(model.wv.index2word, idx_proba))
 
-        tfv = TfidfVectorizer(dtype=np.float32)
-        tfidfmatrix_traindata = tfv.fit_transform(docs)
+        tfv = TfidfVectorizer(tokenizer=identity_tokenizer,
+                              lowercase=False,
+                              dtype=np.float32)
+        tfidfmatrix_traindata = tfv.fit_transform(docs_list)
         featurenames = tfv.get_feature_names()
         idf = tfv._tfidf.idf_
 
@@ -67,9 +67,10 @@ class ScdvHelper:
         for pair in zip(featurenames, idf):
             word_idf_dict[pair[0]] = pair[1]
 
-        prob_wordvecs = self.get_probability_word_vectors(featurenames, 
+        prob_wordvecs = self.get_probability_word_vectors(model,
+                                                     featurenames, 
                                                      word_id_map, 
-                                                     self.num_clusters, 
+                                                     word_prob_map, 
                                                      word_idf_dict)
 
         shelve_dict = {'word_id_map': word_id_map,
@@ -100,9 +101,7 @@ class ScdvHelper:
 
         temp = abs(gwbowv) < thres
         gwbowv[temp] = 0
-
-        print (gwbowv)
-
+        return gwbowv 
 
     def cluster_GMM(self, num_clusters, word_vectors):
         clf =  GaussianMixture(n_components=num_clusters,
@@ -113,19 +112,21 @@ class ScdvHelper:
         return (idx, idx_proba)
 
 
-    def get_probability_word_vectors(self,featurenames, 
+    def get_probability_word_vectors(self,
+                                     model,
+                                     featurenames, 
                                      word_centroid_map, 
-                                     num_clusters, 
+                                     word_centroid_prob_map, 
                                      word_idf_dict):
 
         prob_wordvecs = {}
         for word in word_centroid_map:
             prob_wordvecs[word] = np.zeros(self.num_clusters * self.num_features, dtype='float32')
-            for index in range(0, num_clusters):
-                try:
-                    prob_wordvecs[word][index*num_features:(index+1)*num_features] = model[word] * word_centroid_prob_map[word][index] * word_idf_dict[word]
-                except:
-                    continue
+            for index in range(0, self.num_clusters):
+                #try:
+                prob_wordvecs[word][index*self.num_features:(index+1)*self.num_features] = model[word] * word_centroid_prob_map[word][index] * word_idf_dict[word]
+                #except:
+                #    continue
 
         return prob_wordvecs
 
@@ -138,10 +139,10 @@ class ScdvHelper:
         for word in wordlist:
             try:
                 temp = model['word_id_map'][word]
+                
             except:
                 continue
-
-        bag_of_centroids += model['prob_wordvecs'][word]
+            bag_of_centroids += model['prob_wordvecs'][word]
 
         norm = np.sqrt(np.einsum('...i,...i', bag_of_centroids, bag_of_centroids))
         if(norm!=0):
@@ -156,3 +157,6 @@ class ScdvHelper:
 
         model.close() 
         return min_no, max_no, bag_of_centroids
+
+def identity_tokenizer(text):
+    return text
