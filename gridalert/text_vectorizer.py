@@ -2,6 +2,7 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
+import shelve
 import time
 
 from gensim.models.doc2vec import Doc2Vec
@@ -149,6 +150,11 @@ class TextVectorizer:
     def vectorize_scdvword2vec(self, data, tags):
 
         scdv = ScdvHelper(self.conf, self.cluster)
-        model = scdv.word2vec(data)
-        model.save(self.model_path.replace('.model', '.word2vec.model'))  
+        dict = scdv.create_model(data)
+
+        shelve_db = shelve.open(self.model_path)
+        for key,value in dict.items():
+            shelve_db[key] = value
+        shelve_db.close()
+
         return
