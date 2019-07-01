@@ -103,6 +103,7 @@ class ScdvHelper:
         gwbowv[temp] = 0
         return gwbowv 
 
+
     def cluster_GMM(self, num_clusters, word_vectors):
         clf =  GaussianMixture(n_components=num_clusters,
                     covariance_type="tied", init_params='kmeans', max_iter=50)

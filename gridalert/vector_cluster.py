@@ -18,6 +18,7 @@ from sklearn import preprocessing
 import joblib
 
 from .sqlite3_helper import *
+from .scdv_helper import *
 from .util import reader as util_reader
 from .util import path as util_path
 from .const import Const as const
@@ -101,6 +102,25 @@ class VectorCluster:
                                                        self.cl_conf)
  
         data = util_reader.get_data_from_fasttext(self.model_vec_path, docs, self.cl_conf)
+
+        if self.cl_conf['cluster_normalize'] == 'True':
+            mm = preprocessing.MinMaxScaler()
+            data = mm.fit_transform(data).tolist()
+            joblib.dump(mm, self.model_scl_path) 
+
+        db.close()
+        return data, tags
+
+
+    def get_data_from_scdvword2vec(self):
+
+        db = Sqlite3Helper(self.db_conf)
+        docs, tags = util_reader.get_data_from_sqlite3(db,
+                                                      'service="%s"' % self.service,
+                                                       self.cl_conf)
+
+        scdv = ScdvHelper(self.conf, self.cluster)
+        data = util_reader.get_data_from_scdvword2vec(self.model_vec_path, docs, scdv, self.cl_conf)
 
         if self.cl_conf['cluster_normalize'] == 'True':
             mm = preprocessing.MinMaxScaler()

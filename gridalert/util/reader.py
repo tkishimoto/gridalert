@@ -99,3 +99,9 @@ def get_data_from_fasttext(model_path, docs, cl_conf):
     return data
 
 
+def get_data_from_scdvword2vec(model_path, docs, scdv, cl_conf):
+    # return data and tag from fasttext model
+    data = scdv.get_vector(docs, model_path, train=False)
+    data = data.tolist()
+    return data
+

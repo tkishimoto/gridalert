@@ -157,4 +157,3 @@ class TextVectorizer:
             shelve_db[key] = value
         shelve_db.close()
 
-        return
