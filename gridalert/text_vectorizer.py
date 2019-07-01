@@ -53,3 +53,5 @@ class TextVectorizer:
             elapsed_time = time.time() - start
             self.time.append({'service':service, 'time':elapsed_time})
 
+    def get_time(self):
+        return self.time

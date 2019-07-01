@@ -22,6 +22,7 @@ from .const import Const as const
 
 import smtplib
 from email.mime.text import MIMEText
+from sklearn.manifold import TSNE
 
 class AnomalyAlert:
 
@@ -96,6 +97,9 @@ class AnomalyAlert:
             self.plot_clustering(prediction['data'], 
                                  prediction['tags'], 
                                  prediction['pred_data'])
+            #self.plot_clustering_tsne(prediction['data'], 
+            #                     prediction['tags'], 
+            #                     prediction['pred_data'])
 
 
     def alert(self):
@@ -305,3 +309,11 @@ class AnomalyAlert:
 
         fig.legend([a,b], ['normal events', 'anomaly events'])
         plt.savefig(self.plot_path)
+
+
+    def plot_clustering_tsne(self, data, tags, pred_data):
+        X_reduced = TSNE(n_components=2, random_state=0).fit_transform(data)
+        plt.cla()
+        print (X_reduced[:, 0], pred_data)
+        plt.scatter(X_reduced[:, 0], X_reduced[:, 1], c=pred_data)
+        plt.savefig('/root/mnt/test.png')

@@ -237,3 +237,7 @@ class VectorCluster:
         db = Sqlite3Helper(self.db_conf)
         db.update_many(update, where, buffers)
         db.close()
+
+    def get_time(self):
+        return self.time
+
