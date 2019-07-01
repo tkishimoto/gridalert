@@ -18,7 +18,6 @@ from sklearn import preprocessing
 import joblib
 
 from .sqlite3_helper import *
-from .scdv_helper import *
 from .util import reader as util_reader
 from .util import path as util_path
 from .const import Const as const

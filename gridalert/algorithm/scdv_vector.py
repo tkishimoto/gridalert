@@ -9,34 +9,26 @@ from gensim.models import Word2Vec
 from sklearn.mixture import GaussianMixture
 from sklearn.feature_extraction.text import TfidfVectorizer,HashingVectorizer
 
-from .util import text as util_text
+from .base_vector import *
 
-class ScdvHelper:
+class ScdvVector(BaseVector):
 
-    def __init__(self, conf, cluster):
+    def __init__(self, cl_conf):
+        super().__init__(cl_conf)
 
-        self.conf       = conf
-        self.cluster    = cluster
-
-        self.db_conf    = conf['db']
-        self.cl_conf    = conf[cluster]
-
-        self.num_clusters = int(self.cl_conf['vector_clusters'])
-        self.num_features = int(self.cl_conf['vector_size'])
+        self.num_clusters = int(cl_conf['vector_clusters'])
+        self.num_features = int(cl_conf['vector_size'])
 
 
-    def create_model(self, data):
+    def create_model(self, data, tags, model_path):
 
-        docs_list = []
+        docs = []
 
         for doc in data:
-            if self.cl_conf['vector_jp_num'] == 'True':
-                doc = util_text.filter_doc(doc)
-
-            docs_list.append(doc.split())
+            docs.append(doc.split())
 
         cl_conf = self.cl_conf
-        model = Word2Vec(docs_list, 
+        model = Word2Vec(docs, 
                          workers=int(cl_conf['vector_workers']), 
                          hs = int(cl_conf['vector_hs']), 
                          negative = int(cl_conf['vector_negative']), 
@@ -46,7 +38,6 @@ class ScdvHelper:
                          window=int(cl_conf['vector_window']), 
                          sample=float(cl_conf['vector_sample']), 
                          seed=int(cl_conf['vector_seed']))
-
 
         model.init_sims(replace=True)
         
@@ -59,7 +50,7 @@ class ScdvHelper:
         tfv = TfidfVectorizer(tokenizer=identity_tokenizer,
                               lowercase=False,
                               dtype=np.float32)
-        tfidfmatrix_traindata = tfv.fit_transform(docs_list)
+        tfidfmatrix_traindata = tfv.fit_transform(docs)
         featurenames = tfv.get_feature_names()
         idf = tfv._tfidf.idf_
 
@@ -73,12 +64,14 @@ class ScdvHelper:
                                                      word_prob_map, 
                                                      word_idf_dict)
 
-        shelve_dict = {'word_id_map': word_id_map,
-                       'word_prob_map': word_prob_map,
-                       'word_idf_dict': word_idf_dict,
-                       'prob_wordvecs': prob_wordvecs}
+        shelve_db = shelve.open(model_path)
+        shelve_db['word_id_map'] = word_id_map
+        shelve_db['word_prob_map'] = word_prob_map
+        shelve_db['word_idf_dict'] = word_idf_dict
+        shelve_db['prob_wordvecs'] = prob_wordvecs
+        shelve_db.close()
 
-        return shelve_dict
+        return 
 
 
     def get_vector(self, data, model_path, train=False):
