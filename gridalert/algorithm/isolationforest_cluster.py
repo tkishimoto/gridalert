@@ -64,3 +64,11 @@ class IsolationforestCluster(BaseCluster):
 
         return pred_data
 
+
+    def predict(self, data, model_path):
+
+        model = pickle.load(open(model_path, 'rb'))
+        pred_data = model.predict(data)
+
+        return pred_data
+

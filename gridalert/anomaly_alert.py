@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 #from sklearn.externals import joblib
 import joblib
 
+from .algorithm import *
+
 from .sqlite3_helper import *
 from .util import reader as util_reader
 from .util import path as util_path
@@ -52,13 +54,23 @@ class AnomalyAlert:
             self.model_scl_path = util_path.model_scl_path(self.cl_conf, service)
             self.plot_path = util_path.plot_path(self.cl_conf, service)
 
-            vector_type = self.cl_conf['vector_type']
-            vector_func = getattr(self, "get_data_from_%s" % (vector_type), None)
-            data, tags = vector_func()
+            db = Sqlite3Helper(self.db_conf)
+            data, tags = util_reader.get_data_from_sqlite3(db,
+                                                      'service="%s"' % service,
+                                                       self.cl_conf)
+            db.close()
 
-            cluster_type = self.cl_conf['cluster_type']
-            cluster_func = getattr(self, "predict_%s" % (cluster_type), None)
-            pred_data = cluster_func(data)
+            vector_type = self.cl_conf['vector_type'].capitalize() + 'Vector'
+            vector_func = globals()[vector_type](self.cl_conf)
+            data = vector_func.get_vector(data, self.model_vec_path)
+            data = vector_func.add_dimensions(data)
+
+            cluster_type = self.cl_conf['cluster_type'].capitalize() + 'Cluster'
+            cluster_func = globals()[cluster_type](self.cl_conf)
+            pred_data = cluster_func.predict(data, self.model_cls_path)
+
+            #cluster_type = self.cl_conf['cluster_type']
+            #cluster_func = getattr(self, "predict_%s" % (cluster_type), None)
             pred_dict = {'service': service,
                          'data': data,
                          'tags': tags,
@@ -222,72 +234,6 @@ class AnomalyAlert:
             diff += '\n\n'
 
         return diff
-
-
-    def get_data_from_doc2vec(self):
-        db = Sqlite3Helper(self.db_conf)
-        docs, tags = util_reader.get_data_from_sqlite3(db,
-                                                      'service="%s"' % self.service,
-                                                       self.cl_conf)
-
-        data = util_reader.get_data_from_doc2vec(self.model_vec_path, docs, self.cl_conf)
-
-        if self.cl_conf['cluster_normalize'] == 'True':
-            mm = joblib.load(self.model_scl_path)
-            data = mm.transform(data).tolist()
-
-        return data, tags
-
-
-    def get_data_from_fasttext(self):
-
-        db = Sqlite3Helper(self.db_conf)
-        docs, tags = util_reader.get_data_from_sqlite3(db,
-                                                      'service="%s"' % self.service,
-                                                       self.cl_conf)
-
-        data = util_reader.get_data_from_fasttext(self.model_vec_path, docs, self.cl_conf)
-
-        if self.cl_conf['cluster_normalize'] == 'True':
-            mm = joblib.load(self.model_scl_path)
-            data = mm.transform(data).tolist()
-
-        return data, tags
-
-
-    def get_data_from_scdvword2vec(self):
-
-        db = Sqlite3Helper(self.db_conf)
-        docs, tags = util_reader.get_data_from_sqlite3(db,
-                                                      'service="%s"' % self.service,
-                                                       self.cl_conf)
-
-        scdv = ScdvHelper(self.conf, self.cluster)
-        data = util_reader.get_data_from_scdvword2vec(self.model_vec_path, docs, scdv, self.cl_conf)
-
-        if self.cl_conf['cluster_normalize'] == 'True':
-            mm = joblib.load(self.model_scl_path)
-            data = mm.transform(data).tolist()
-
-        db.close()
-        return data, tags
-
-
-
-    def predict_isolationforest(self, data):
-
-        cluster_model = pickle.load(open(self.model_cls_path, 'rb'))
-        pred_data = cluster_model.predict(data)
-
-        return pred_data
-
-
-    def predict_dbscan(self, data):
-
-        cluster_model = pickle.load(open(self.model_cls_path, 'rb'))
-        pred_data = cluster_model.labels_
-
-        return pred_data
 
 
     def plot_clustering(self, data, tags, pred_data):
