@@ -2,8 +2,8 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
-from fastText import train_unsupervised
-from fastText import load_model
+from fasttext import train_unsupervised
+from fasttext import load_model
 
 from .base_vector import *
 

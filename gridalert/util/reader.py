@@ -1,6 +1,3 @@
-from gensim.models.doc2vec import Doc2Vec
-from fastText import load_model
-
 from . import text  as util_text
 
 def get_data_from_sqlite3(db, where, cl_conf):
