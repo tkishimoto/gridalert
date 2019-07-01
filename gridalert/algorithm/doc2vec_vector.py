@@ -43,3 +43,21 @@ class Doc2vecVector(BaseVector):
         model.save(model_path)
 
         return
+
+
+    def get_vector(self, docs, model_path):
+        data = []
+
+        model = Doc2Vec.load(model_path)
+        model.random.seed(int(self.cl_conf['vector_seed']))
+
+        for doc in docs:
+            tmp_doc = doc.replace('\n', '').split()
+
+            vector = model.infer_vector(tmp_doc).tolist()
+            model.random.seed(int(self.cl_conf['vector_seed']))
+
+            data.append(vector)
+
+        return data
+

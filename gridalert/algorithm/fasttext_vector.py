@@ -3,6 +3,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 from fastText import train_unsupervised
+from fastText import load_model
 
 from .base_vector import *
 
@@ -17,8 +18,6 @@ class FasttextVector(BaseVector):
         text_path = self.cl_conf['model_dir'] + '/fasttext.tmp'
 
         trainings = open(text_path, 'w', errors='replace')
-
-        print (data)  
 
         for doc, tag in zip(data, tags):
             trainings.write('%s\n' % doc)
@@ -50,4 +49,19 @@ class FasttextVector(BaseVector):
                         verbose = verbose)
 
         model.save_model(model_path)
+
+
+    def get_vector(self, docs, model_path):
+
+        model = load_model(model_path)
+    
+        data = []
+        for doc in docs:
+
+            tmp_doc = doc.replace('\n', '')
+            vector = model.get_sentence_vector(tmp_doc).tolist()
+
+            data.append(vector)
+ 
+        return data
 

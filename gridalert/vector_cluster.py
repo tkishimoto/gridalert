@@ -4,18 +4,13 @@ logger = getLogger(__name__)
 
 import math
 import time
-import pickle
 import difflib
 import shelve
+import joblib
 import numpy as np
 from pprint import pformat
 
-from gensim.models.doc2vec import Doc2Vec
-from sklearn.ensemble import IsolationForest
-from sklearn.cluster import DBSCAN
-from sklearn import preprocessing
-#from sklearn.externals import joblib
-import joblib
+from .algorithm import *
 
 from .sqlite3_helper import *
 from .util import reader as util_reader
@@ -55,13 +50,22 @@ class VectorCluster:
 
             start = time.time()
 
-            vector_type = self.cl_conf['vector_type']
-            vector_func = getattr(self, "get_data_from_%s" % (vector_type), None)
-            data, tags = vector_func()
+            db = Sqlite3Helper(self.db_conf)
+            data, tags = util_reader.get_data_from_sqlite3(db,
+                                                      'service="%s"' % service,
+                                                       self.cl_conf)
+            db.close()
 
-            cluster_type = self.cl_conf['cluster_type']
-            cluster_func = getattr(self, "cluster_%s" % (cluster_type), None)
-            cluster_func(data, tags)
+            vector_type = self.cl_conf['vector_type'].capitalize() + 'Vector'
+            vector_func = globals()[vector_type](self.cl_conf)
+            data = vector_func.get_vector(data, self.model_vec_path)
+            data = self.add_dimensions(data)
+
+            cluster_type = self.cl_conf['cluster_type'].capitalize() + 'Cluster'
+            cluster_func = globals()[cluster_type](self.cl_conf)
+            pred_data = cluster_func.create_model(data, tags, self.model_cls_path)
+
+            self.dump_to_db(tags, pred_data, data)
 
             elapsed_time = time.time() - start
             self.time.append({'service':service, 'time':elapsed_time})
@@ -71,128 +75,31 @@ class VectorCluster:
             if self.cl_conf['use_diff'] == 'True':
                 self.diff_anomaly()
 
-    def get_time(self):
-        return self.time
-  
 
-    def get_data_from_doc2vec(self):
- 
-        db = Sqlite3Helper(self.db_conf)
-        docs, tags = util_reader.get_data_from_sqlite3(db,
-                                                      'service="%s"' % self.service,
-                                                       self.cl_conf)
-  
-        data = util_reader.get_data_from_doc2vec(self.model_vec_path, docs, self.cl_conf)
+    def add_dimensions(self, docs):
 
-        if self.cl_conf['cluster_normalize'] == 'True':
-            mm = preprocessing.MinMaxScaler()
-            data = mm.fit_transform(data).tolist()
-            joblib.dump(mm, self.model_scl_path) 
+        data = []
+        arbitrary_words = self.cl_conf['cluster_arbitrary_words'].split(',')
 
-        db.close()
-        return data, tags
+        for doc in docs:
+            data_tmp = doc
 
+            for arbitrary_word in arbitrary_words:
+                if arbitrary_word == '':
+                    continue
 
-    def get_data_from_fasttext(self):
- 
-        db = Sqlite3Helper(self.db_conf)
-        docs, tags = util_reader.get_data_from_sqlite3(db,
-                                                      'service="%s"' % self.service,
-                                                       self.cl_conf)
- 
-        data = util_reader.get_data_from_fasttext(self.model_vec_path, docs, self.cl_conf)
+                data_tmp.append(doc.count(arbitrary_word))
 
-        if self.cl_conf['cluster_normalize'] == 'True':
-            mm = preprocessing.MinMaxScaler()
-            data = mm.fit_transform(data).tolist()
-            joblib.dump(mm, self.model_scl_path) 
+            if self.cl_conf['cluster_count_int'] == 'True':
+                counter = util_text.count_int(doc)
+                data_tmp.append(counter)
 
-        db.close()
-        return data, tags
+            if self.cl_conf['cluster_count_word'] == 'True':
+                data_tmp.append(len(tmp_doc))
 
+            data.append(data_tmp)
 
-    def get_data_from_scdvword2vec(self):
-
-        db = Sqlite3Helper(self.db_conf)
-        docs, tags = util_reader.get_data_from_sqlite3(db,
-                                                      'service="%s"' % self.service,
-                                                       self.cl_conf)
-
-        scdv = ScdvHelper(self.conf, self.cluster)
-        data = util_reader.get_data_from_scdvword2vec(self.model_vec_path, docs, scdv, self.cl_conf)
-
-        if self.cl_conf['cluster_normalize'] == 'True':
-            mm = preprocessing.MinMaxScaler()
-            data = mm.fit_transform(data).tolist()
-            joblib.dump(mm, self.model_scl_path) 
-
-        db.close()
-        return data, tags
-
-
-    def cluster_isolationforest(self, data, tags):
-        data = np.array(data)
-
-        cl_conf = self.cl_conf
-
-        max_samples = int(cl_conf['cluster_max_samples'])
-        contamination = cl_conf['cluster_contamination']
-        max_features = cl_conf['cluster_max_features']
-        bootstrap = cl_conf['cluster_bootstrap']
-        behaviour = cl_conf['cluster_behaviour']
-
-        if max_samples > len(data):
-            max_samples = len(data)
-            logger.warn('max_samples set to %s' % len(data))
-
-        if contamination != 'auto':
-            contamination = float(contamination)
-
-        if max_features.isdigit():
-            max_features = int(max_features)
-        else:
-            max_features = float(max_features)
-
-        if bootstrap == 'True':
-            bootstrap = True
-        else:
-            bootstrap = False
-
-        # not allowed
-        if (contamination == 'auto') and (behaviour == 'old'):
-            return
-
-        model = IsolationForest(n_estimators=int(cl_conf['cluster_n_estimators']),
-                                max_samples=max_samples,
-                                contamination=contamination,
-                                max_features=max_features,
-                                bootstrap=bootstrap,
-                                n_jobs=int(cl_conf['cluster_n_jobs']),
-                                behaviour=cl_conf['cluster_behaviour'],
-                                random_state=int(cl_conf['cluster_random_state']))
-        model.fit(data)
-        pred_data = model.predict(data)
-
-        self.dump_to_db(tags, pred_data, data)          
- 
-        pickle.dump(model, open(self.model_cls_path, 'wb'))
-
-
-    def cluster_dbscan(self, data, tags):
-        data = np.array(data)
-
-        cl_conf = self.cl_conf
-        model = DBSCAN(eps=float(cl_conf['cluster_eps']),
-                       min_samples=int(cl_conf['cluster_min_samples']),
-                       metric=cl_conf['cluster_metric'],
-                       algorithm=cl_conf['cluster_algorithm'],
-                       leaf_size=int(cl_conf['cluster_leaf_size']),
-                       n_jobs=int(cl_conf['cluster_n_jobs']))
-        model.fit(data)
-        pred_data = model.labels_
-        self.dump_to_db(tags, pred_data, data)          
- 
-        pickle.dump(model, open(self.model_cls_path, 'wb'))
+        return data
 
 
     def dump_to_db(self, tags, pred_data, data):

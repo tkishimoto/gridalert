@@ -36,9 +36,11 @@ class TextVectorizer:
 
             start = time.time()  
 
-            db_type = self.db_conf['type']
-            db_func = getattr(self, "get_data_from_%s" % (db_type), None)
-            data, tags = db_func()
+            db = Sqlite3Helper(self.db_conf)
+            data, tags = util_reader.get_data_from_sqlite3(db,
+                                                      'service="%s"' % service,
+                                                       self.cl_conf)
+            db.close() 
 
             if len(data) == 0:
                 logger.info('No data are selected.')
@@ -50,22 +52,4 @@ class TextVectorizer:
 
             elapsed_time = time.time() - start
             self.time.append({'service':service, 'time':elapsed_time})
-
- 
-    def get_data_from_sqlite3(self):
- 
-        db = Sqlite3Helper(self.db_conf) 
-        data, tags = util_reader.get_data_from_sqlite3(db, 
-                                                      'service="%s"' % self.service,
-                                                       self.cl_conf)
-        db.close() 
-        docs = []
-
-        for doc, tag in zip(data, tags):
-
-            if self.cl_conf['vector_jp_num'] == 'True':
-                doc = util_text.filter_doc(doc)
-                docs.append(doc)
- 
-        return docs, tags
 
