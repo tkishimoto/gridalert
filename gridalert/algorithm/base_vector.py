@@ -2,6 +2,8 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
+from ..util import text as util_text
+
 class BaseVector:
 
     def __init__(self, cl_conf):
@@ -12,28 +14,27 @@ class BaseVector:
     def create_model(self):
         return 
 
-    def add_dimensions(self, docs):
+    def add_dimensions(self, data, docs):
 
-        data = []
+        results = []
         arbitrary_words = self.cl_conf['cluster_arbitrary_words'].split(',')
-
-        for doc in docs:
-            data_tmp = doc
+        for vector, doc in zip(data, docs):
+            vector_tmp = vector.tolist()
 
             for arbitrary_word in arbitrary_words:
                 if arbitrary_word == '':
                     continue
 
-                data_tmp.append(doc.count(arbitrary_word))
+                vector_tmp.append(doc.count(arbitrary_word))
 
             if self.cl_conf['cluster_count_int'] == 'True':
                 counter = util_text.count_int(doc)
-                data_tmp.append(counter)
+                vector_tmp.append(counter)
 
             if self.cl_conf['cluster_count_word'] == 'True':
-                data_tmp.append(len(tmp_doc))
+                vector_tmp.append(len(doc.split()))
 
-            data.append(data_tmp)
+            results.append(vector_tmp)
 
-        return data
+        return results
 
