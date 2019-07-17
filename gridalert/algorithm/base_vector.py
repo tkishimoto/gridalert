@@ -19,7 +19,7 @@ class BaseVector:
         results = []
         arbitrary_words = self.cl_conf['cluster_arbitrary_words'].split(',')
         for vector, doc in zip(data, docs):
-            vector_tmp = vector.tolist()
+            vector_tmp = vector
 
             for arbitrary_word in arbitrary_words:
                 if arbitrary_word == '':

@@ -56,15 +56,15 @@ class AnomalyAlert:
             self.plot_path = util_path.plot_path(self.cl_conf, service)
 
             db = Sqlite3Helper(self.db_conf)
-            data, tags = util_reader.get_data_from_sqlite3(db,
+            docs, tags = util_reader.get_data_from_sqlite3(db,
                                                       'service="%s"' % service,
                                                        self.cl_conf)
             db.close()
 
             vector_type = self.cl_conf['vector_type'].capitalize() + 'Vector'
             vector_func = globals()[vector_type](self.cl_conf)
-            data = vector_func.get_vector(data, self.model_vec_path)
-            data = vector_func.add_dimensions(data)
+            data = vector_func.get_vector(docs, self.model_vec_path)
+            data = vector_func.add_dimensions(data, docs)
 
             cluster_type = self.cl_conf['cluster_type'].capitalize() + 'Cluster'
             cluster_func = globals()[cluster_type](self.cl_conf)
