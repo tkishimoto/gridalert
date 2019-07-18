@@ -18,6 +18,11 @@ class LogwatchfineTemplate(LogwatchTemplate):
                                           '- dmlite End -'])
                 self.service_names.append('dmlite')
 
+            elif (service == 'login-sshd'):
+                self.service_keys.append(['- SSHD Begin -',
+                                          '- SSHD End -'])
+                self.service_names.append('sshd')
+
             else:
                 logger.info('%s not supported' % (service))
            
@@ -78,6 +83,9 @@ class LogwatchfineTemplate(LogwatchTemplate):
             if service == 'dmlite':
                 buffers += self.dmlite(meta, data)
 
+            if service == 'sshd':
+                buffers += self.sshd(meta, data)
+
         return buffers
 
 
@@ -112,3 +120,54 @@ class LogwatchfineTemplate(LogwatchTemplate):
             buffers.append([tag, cluster, host, date, service,
                             metadata, line, label])
         return buffers
+
+
+    def sshd(self, meta, data):
+        buffers = []
+        service = 'login-sshd'
+
+        lines = data.split('\n')
+
+        header = ''
+        login = ''
+        login_buffer = []
+
+        for line in lines:
+            if 'Users logging in through sshd:' in line:
+                header = line + '\n'
+                continue
+            
+            elif '' == header:
+                header = ''
+                continue
+
+            if not header:
+                continue
+
+            if line[0:4] == '    ' and line[4] != ' ': 
+                if login == '':
+                    login += line + '\n'
+                else:
+                    login_buffer.append(header + login)
+                    login = line + '\n'
+
+            if login != '' and line[0:7] == '       ' and line[7] != ' ':
+                login += line + '\n'
+
+        login_buffer.append(header + login)
+
+        for login in login_buffer:
+            # tag, cluster, host, date, service, metadata, data, label
+            cluster  = self.cl_conf['name']
+            host     = meta['host']
+            date     = meta['date']
+            metadata = 'range=%s,level=%s' % (meta['range'], meta['level'])
+            label    = '1'
+            tag      = util_hash.md5([cluster, host, str(date), service, login])
+
+            buffers.append([tag, cluster, host, date, service,
+                            metadata, login, label])
+        return buffers
+
+        
+
