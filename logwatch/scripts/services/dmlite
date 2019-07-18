@@ -55,10 +55,19 @@ for line in lines:
         if re.match('\(\d+', word): 
             word = '(NUMBER'
 
+        if re.match('\d+,', word): 
+            word = 'NUMBER,'
+
+        if re.match('id\:\d+', word): 
+            word = 'id:NUMBER,'
+
         if re.match('\d+\)', word): 
             word = 'NUMBER)'
 
         if re.match('\d+\:\'.*\'', word): 
+            word = 'FILE_NAME'
+
+        if re.match('(data|user|group|panda|log|NTUP|AOD|DAOD|EVNT|ESD|DESD|HITS|RDO|output|test).*\)\.', word): 
             word = 'FILE_NAME'
 
         if re.match('\'\d+\-..\'', word): 
