@@ -134,7 +134,7 @@ class LogwatchfineTemplate(LogwatchTemplate):
 
         for line in lines:
             if 'Users logging in through sshd:' in line:
-                header = line + '\n'
+                header = '\n' + line + '\n'
                 continue
             
             elif '' == header:
