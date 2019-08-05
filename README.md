@@ -15,7 +15,7 @@ Dockerfile is available to build a docker image of the gridalert.
 ## Command line interfaces 
 All commands of the gridalert require a configuration file (e.g. conf.ini) for the configparser. Details of the configuration file are shown in the next section.
 
-    $ gridalert {text, vector, cluster, scan, plot, cherrypy, alert}
+    $ gridalert {text, vector, cluster, scan, plot, cherrypy, alert} -c mnt/conf.ini
 
 * text: extract information from text log files, then store it to database.
 
