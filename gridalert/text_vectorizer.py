@@ -7,7 +7,6 @@ import time
 from .algorithm import *
 from .sqlite3_helper import *
 
-from .util import text as util_text
 from .util import reader as util_reader
 from .util import path as util_path
 

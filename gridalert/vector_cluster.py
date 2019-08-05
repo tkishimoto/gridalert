@@ -19,19 +19,12 @@ from .const import Const as const
 
 class VectorCluster:
 
-    def __init__(self, conf, cluster):
+    def __init__(self, conf):
 
         self.conf       = conf
-        self.cluster    = cluster
 
-        self.db_conf    = conf['db']
-        self.cl_conf    = conf[cluster]
-
-        self.service    = ''
-        self.model_vec_path = ''
-        self.model_cls_path = ''
-        self.model_scl_path = ''
-        self.model_result_path = ''
+        self.service     = ''
+        self.model_paths = ''
 
         self.time       = []
 
@@ -40,30 +33,29 @@ class VectorCluster:
 
    
     def clustering(self):
+ 
+        conf = self.conf
 
-        for service in self.cl_conf['services'].split(','):
+        for service in conf['cl']['services'].split(','):
             self.service = service
-            self.model_vec_path = util_path.model_vec_path(self.cl_conf, service)
-            self.model_cls_path = util_path.model_cls_path(self.cl_conf, service)
-            self.model_scl_path = util_path.model_scl_path(self.cl_conf, service)
-            self.model_result_path = util_path.model_result_path(self.cl_conf, service)
+            self.model_paths = util_path.model_paths(conf['cl'], service)
 
             start = time.time()
 
-            db = Sqlite3Helper(self.db_conf)
+            db = Sqlite3Helper(conf)
             docs, tags = util_reader.get_data_from_sqlite3(db,
                                                       'service="%s"' % service,
-                                                       self.cl_conf)
+                                                       conf['cl'])
             db.close()
 
-            vector_type = self.cl_conf['vector_type'].capitalize() + 'Vector'
-            vector_func = globals()[vector_type](self.cl_conf)
-            data = vector_func.get_vector(docs, self.model_vec_path)
+            vector_type = conf['cl']['vector_type'].capitalize() + 'Vector'
+            vector_func = globals()[vector_type](conf['cl'])
+            data = vector_func.get_vector(docs, self.model_paths['vec'])
             data = vector_func.add_dimensions(data, docs)
 
-            cluster_type = self.cl_conf['cluster_type'].capitalize() + 'Cluster'
-            cluster_func = globals()[cluster_type](self.cl_conf)
-            pred_data = cluster_func.create_model(data, tags, self.model_cls_path)
+            cluster_type = conf['cl']['cluster_type'].capitalize() + 'Cluster'
+            cluster_func = globals()[cluster_type](conf['cl'])
+            pred_data = cluster_func.create_model(data, tags, self.model_paths['cls'])
 
             self.dump_to_db(tags, pred_data, data)
 
@@ -72,11 +64,13 @@ class VectorCluster:
 
             self.save_accuracy()
 
-            if self.cl_conf['use_diff'] == 'True':
+            if conf['cl']['use_diff'] == 'True':
                 self.diff_anomaly()
 
 
     def dump_to_db(self, tags, pred_data, data):
+        conf = self.conf
+
         labels = []
         means  = []
         for ii, pred in enumerate(pred_data):
@@ -110,31 +104,33 @@ class VectorCluster:
             prediction = pred_data[ii]
             buffers.append([str(prediction), feature, tag])
 
-        if self.cl_conf['use_prediction'] == 'True':
+        if self.conf['cl']['use_prediction'] == 'True':
             update = 'prediction=?,feature=?'
             where = 'tag=?'
 
-            db = Sqlite3Helper(self.db_conf)
+            db = Sqlite3Helper(conf)
             db.create_table()
 
             db.update_many(update, where, buffers)
             db.close()
 
         # shelve
-        shelve_db = shelve.open(self.model_result_path)
+        shelve_db = shelve.open(self.model_paths['result'])
         for buffer in buffers:
             shelve_db[buffer[2]] = {'prediction':buffer[0]}
         shelve_db.close()
 
 
     def save_accuracy(self):
-        shelve_db = shelve.open(self.model_result_path)
+        conf = self.conf 
+
+        shelve_db = shelve.open(self.model_paths['result'])
 
         den0, den1 = 0., 0.
         num0, num1 = 0., 0.
 
         for key in shelve_db:
-            db = Sqlite3Helper(self.db_conf)
+            db = Sqlite3Helper(conf)
             field = db.select(where='tag="%s"' % key)
             label = field[0]['label']
 
@@ -161,7 +157,7 @@ class VectorCluster:
         if den1 > 1:
             acc1 = num1/den1
 
-        logger.info('RESULTS: %s %s' % (self.cl_conf['name'], self.service))
+        logger.info('RESULTS: %s %s' % (conf['cl']['name'], self.service))
         logger.info('RESULTS: accuracy of normal events (pred/pre-label): %s/%s = %s' % (num1,
                                                                den1,
                                                                acc1))
@@ -177,7 +173,7 @@ class VectorCluster:
 
         params = {}
         for param in const.MLPARAMS:
-            params[param] = self.cl_conf[param]
+            params[param] = conf['cl'][param]
       
         scan_dict['params'] = params
  
@@ -189,9 +185,9 @@ class VectorCluster:
 
 
     def diff_anomaly(self):
-        db = Sqlite3Helper(self.db_conf)
+        db = Sqlite3Helper(conf)
         fields = db.select(where='service="%s"' % self.service,
-                           base_match=self.cl_conf)
+                           base_match=conf['cl'])
         db.close()
 
 
@@ -234,7 +230,7 @@ class VectorCluster:
         update = 'diff=?'
         where = 'tag=?'
 
-        db = Sqlite3Helper(self.db_conf)
+        db = Sqlite3Helper(conf)
         db.update_many(update, where, buffers)
         db.close()
 

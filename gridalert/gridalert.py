@@ -98,8 +98,9 @@ class GridAlert:
    
  
     def clustering(self):
-        for cluster in self.clusters:
-            vc = VectorCluster(self.conf, cluster)
+        for cluster in self.conf['clusters']:
+            self.conf['cl'] = self.conf[cluster]
+            vc = VectorCluster(self.conf)
             vc.clustering()
 
    
