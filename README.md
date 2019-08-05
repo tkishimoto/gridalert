@@ -13,7 +13,7 @@ Dockerfile is available to build a docker image of the gridalert.
    
 {YOUR_DATA_DIRECTORY} is a directory path, which contains input data. Please see contents of the Dockerfile if you want to install the gridalert to physical machines.
 ## Command line interfaces 
-All commands of the gridalert require a configuration file (e.g. conf.ini) for the configparser. Details of the configuration file are shown in the next section.
+All commands of the gridalert require a configuration file (e.g. conf.ini) for the configparser. Details of the configuration file are shown in the next section. Please see gridalert/main.py if you want to use gridalert module directly.
 
     $ gridalert {text, vector, cluster, scan, plot, cherrypy, alert} -c mnt/conf.ini
 
@@ -36,13 +36,34 @@ A logwatch script for Disk Pool Manager(DPM)for Grid site operation is available
     services = dmlite-httpd,dmlite-xrootd,dmlite-other  
     
 * vector: vectorize the text logs.
+
+doc2vec, fasttext, SCDV algorithms are available.
+
 * cluster: perform vector clustering.
+
+Only IsolationForest algorithm is available.
+
 * scan: scan hyper parameters for vector and cluster
+
+Hyper parameters of MLs are scanned by putting multiple parameters in the cofiguration file. E.g.:
+
+    vector_size   = 3,4,5
+    vector_window = 5,6,7
+    
+Multiple parameters are not allowed in single vector and cluster commands.    
+
 * plot: make plots.
 * cherrypy: launch cherrypy for visualization.
+
+Plots and log messages are displayed by a browser with localhost:8080.
+
 * alert: alert anomaly events.
 
-Please see gridalert/main.py if you want to use gridalert module directly.
+Anomaly text logs are e-mailed with the following configurations:
+
+    [alert]
+    to_address = xxxx@xxxx.xx
+    from_address = xxxx@xxxx.xx
 
 ## Configuration 
 The following is an example of the configuration file. [cluster/xxxx] need to be defined to run the gridalert.
