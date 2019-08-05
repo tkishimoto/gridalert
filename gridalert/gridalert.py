@@ -32,6 +32,7 @@ class GridAlert:
         myconf = self.read_option_conf(myconf, options)
                     
         clusters = []
+        self.myconf = myconf
         self.conf = {}
 
         for section in myconf.sections():
@@ -86,8 +87,9 @@ class GridAlert:
             dc.text_to_db()
 
     def labeling(self):
-        for cluster in self.clusters:
-            lh = LabelHelper(self.conf, cluster)
+        for cluster in self.conf['clusters']:
+            self.conf['cl'] = self.conf[cluster]
+            lh = LabelHelper(self.conf)
             lh.labeling()
 
     def vectorize(self):
@@ -105,8 +107,8 @@ class GridAlert:
 
    
     def scan(self):
-        for cluster in self.clusters:
-            sh = ScanHelper(self.conf, cluster)   
+        for cluster in self.conf['clusters']:
+            sh = ScanHelper(self.myconf, cluster)   
             sh.scan()     
 
     def plot(self):

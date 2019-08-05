@@ -29,13 +29,11 @@ class ScanHelper:
     def __init__(self, conf, cluster):
 
         self.conf       = conf
+        self.cl_conf    = conf[cluster]
         self.cluster    = cluster
 
-        self.db_conf    = conf['db']
-        self.cl_conf    = conf[cluster]
-
-
     def scan(self):
+        conf = self.conf
         params = []
 
         for param in const.MLPARAMS:
@@ -115,8 +113,15 @@ class ScanHelper:
 
         os.makedirs(conf[cluster]['model_dir'], exist_ok=True)
 
-        tv = TextVectorizer(conf, cluster)
-        vc = VectorCluster(conf, cluster)
+        myconf = {}
+        for section in conf.sections():
+            myconf[section] = conf[section]
+        myconf['DEFAULT'] = conf['DEFAULT']
+        myconf['cl'] = conf[cluster]
+
+
+        tv = TextVectorizer(myconf)
+        vc = VectorCluster(myconf)
 
         tv.vectorize()
         vc.clustering()

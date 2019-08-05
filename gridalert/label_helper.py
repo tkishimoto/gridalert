@@ -9,23 +9,19 @@ from .util import hash as util_hash
 
 class LabelHelper:
 
-    def __init__(self, conf, cluster):
+    def __init__(self, conf):
 
         self.conf       = conf
-        self.cluster    = cluster
-
-        self.db_conf    = conf['db']
-        self.cl_conf    = conf[cluster]
-
         self.service    = ''
 
 
     def labeling(self):
+        conf = self.conf
 
-        for service in self.cl_conf['services'].split(','):
+        for service in conf['cl']['services'].split(','):
             self.service = service
         
-            db_type = self.db_conf['type']
+            db_type = conf['db']['type']
 
             func = getattr(self, "label_%s" % db_type, None)
             if func is not None:
@@ -36,13 +32,13 @@ class LabelHelper:
                         
    
     def label_sqlite3(self):
-        db   = Sqlite3Helper(self.db_conf)
+        db   = Sqlite3Helper(self.conf)
         where = 'service="%s"' % self.service
         results = db.select(where=where)
   
         fields = []
         for result in results:
-            if util_match.base_match_wo_cluster(self.cl_conf,
+            if util_match.base_match_wo_cluster(self.conf['cl'],
                                          result['host'],
                                          result['date']):
                 fields.append(result)
@@ -72,7 +68,7 @@ class LabelHelper:
             label = value[2]
             tags = value[3]
 
-            logger.info('Process cluster : %s' % self.cl_conf['name'])
+            logger.info('Process cluster : %s' % self.conf['cl']['name'])
             logger.info('Process (%s/%s) %s counts observed' % (counter,
                                                       len(data_dict.keys()),
                                                       len(tags)))                   
