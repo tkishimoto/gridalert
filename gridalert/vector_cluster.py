@@ -183,6 +183,7 @@ class VectorCluster:
 
 
     def diff_anomaly(self):
+        conf = self.conf 
         db = Sqlite3Helper(conf)
         fields = db.select(where='service="%s"' % self.service,
                            base_match=conf['cl'])
