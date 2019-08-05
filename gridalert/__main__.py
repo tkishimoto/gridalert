@@ -32,10 +32,6 @@ def command_cherrypy(args):
     ga = GridAlert(args.conf, args.option)
     ga.visualize()
 
-def command_html(args):
-    ga = GridAlert(args.conf, args.option)
-    ga.html()
-
 def command_alert(args):
     ga = GridAlert(args.conf, args.option)
     ga.alert()
@@ -137,18 +133,6 @@ def main():
                              default='')
     parser_cherrypy.set_defaults(handler=command_cherrypy) 
 
-    # html
-    parser_html = subparsers.add_parser('html')
-    parser_html.add_argument('-c', '--conf', 
-                             action='store', 
-                             dest='conf', 
-                             default='')
-    parser_html.add_argument('-o', '--option', 
-                             action='store', 
-                             dest='option', 
-                             default='')
-    parser_html.set_defaults(handler=command_html) 
- 
     # alert
     parser_alert = subparsers.add_parser('alert')
     parser_alert.add_argument('-c', '--conf', 
