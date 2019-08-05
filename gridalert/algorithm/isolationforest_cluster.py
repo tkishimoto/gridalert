@@ -69,6 +69,7 @@ class IsolationforestCluster(BaseCluster):
 
         model = pickle.load(open(model_path, 'rb'))
         pred_data = model.predict(data)
+        score_data = model.decision_function(data)
 
-        return pred_data
+        return pred_data, score_data
 

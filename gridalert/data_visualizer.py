@@ -13,7 +13,6 @@ class DataVisualizer:
     def __init__(self, conf):
 
         self.conf       = conf
-        self.db_conf    = conf['db']
 
 
     @cherrypy.expose
@@ -22,7 +21,7 @@ class DataVisualizer:
         html  = util_html.header()
         html += '<h4>gridalert top page</h4>'
 
-        clusters = self.conf['DEFAULT']['clusters'].split(',') 
+        clusters = self.conf['clusters']
 
         html += '<ul>'
         for cluster in clusters:
@@ -45,7 +44,7 @@ class DataVisualizer:
     def service(self, cluster, service):
 
         cl_conf = self.conf[cluster]
-        db   = Sqlite3Helper(self.db_conf)
+        db   = Sqlite3Helper(self.conf)
         where = 'service="%s" and prediction=="-1"' % service
         fields = db.select(where=where, base_match=cl_conf)
 
@@ -81,7 +80,7 @@ class DataVisualizer:
 
     @cherrypy.expose
     def log(self, tag):
-        db   = Sqlite3Helper(self.db_conf)
+        db   = Sqlite3Helper(self.conf)
         where = 'tag=="%s"' % tag
         field = db.select(where=where)[0]
 

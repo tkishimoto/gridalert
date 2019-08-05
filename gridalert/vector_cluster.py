@@ -6,9 +6,7 @@ import math
 import time
 import difflib
 import shelve
-import joblib
 import numpy as np
-from pprint import pformat
 
 from .algorithm import *
 

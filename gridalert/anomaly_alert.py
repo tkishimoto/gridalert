@@ -26,56 +26,45 @@ from sklearn.manifold import TSNE
 
 class AnomalyAlert:
 
-    def __init__(self, conf, cluster):
-
-        self.conf       = conf
-        self.cluster    = cluster
-
-        self.db_conf    = conf['db']
-        self.cl_conf    = conf[cluster]
-
-        self.service   = ''
-        self.model_vec_path   = ''
-        self.model_cls_path   = ''
-        self.model_scl_path   = ''
-
-        self.plot_path     = ''
-
-        self.predictions = []
+    def __init__(self, conf):
 
         self.conf = conf
 
+        self.service   = ''
+        self.model_paths   = []
+        self.plot_paths    = []
+
+        self.predictions = []
+
 
     def predict(self):
+        conf = self.conf
 
-        for service in self.cl_conf['services'].split(','):
+        for service in conf['cl']['services'].split(','):
             self.service = service
-            self.model_vec_path = util_path.model_vec_path(self.cl_conf, service)
-            self.model_cls_path = util_path.model_cls_path(self.cl_conf, service)
-            self.model_scl_path = util_path.model_scl_path(self.cl_conf, service)
-            self.plot_path = util_path.plot_path(self.cl_conf, service)
+            self.model_paths = util_path.model_paths(conf['cl'], service)
+            self.plot_paths = util_path.plot_paths(conf['cl'], service)
 
-            db = Sqlite3Helper(self.db_conf)
+            db = Sqlite3Helper(conf)
             docs, tags = util_reader.get_data_from_sqlite3(db,
                                                       'service="%s"' % service,
-                                                       self.cl_conf)
+                                                       conf['cl'])
             db.close()
 
-            vector_type = self.cl_conf['vector_type'].capitalize() + 'Vector'
-            vector_func = globals()[vector_type](self.cl_conf)
-            data = vector_func.get_vector(docs, self.model_vec_path)
+            vector_type = conf['cl']['vector_type'].capitalize() + 'Vector'
+            vector_func = globals()[vector_type](conf['cl'])
+            data = vector_func.get_vector(docs, self.model_paths['vec'])
             data = vector_func.add_dimensions(data, docs)
 
-            cluster_type = self.cl_conf['cluster_type'].capitalize() + 'Cluster'
-            cluster_func = globals()[cluster_type](self.cl_conf)
-            pred_data = cluster_func.predict(data, self.model_cls_path)
+            cluster_type = conf['cl']['cluster_type'].capitalize() + 'Cluster'
+            cluster_func = globals()[cluster_type](conf['cl'])
+            pred_data, score_data = cluster_func.predict(data, self.model_paths['cls'])
 
-            #cluster_type = self.cl_conf['cluster_type']
-            #cluster_func = getattr(self, "predict_%s" % (cluster_type), None)
             pred_dict = {'service': service,
                          'data': data,
                          'tags': tags,
-                         'pred_data': pred_data }
+                         'pred_data': pred_data,
+                         'score_data': score_data }
 
             self.predictions.append(pred_dict)
 
@@ -86,46 +75,49 @@ class AnomalyAlert:
             update = 'prediction=?'
             where = 'tag=?'
 
-            db = Sqlite3Helper(self.db_conf)
+            db = Sqlite3Helper(conf)
             db.update_many(update, where, buffers)
             db.close()
 
 
     def plot(self):
         for prediction in self.predictions:
-            self.plot_path = util_path.plot_path(self.cl_conf, prediction['service'])
+            self.plot_paths = util_path.plot_paths(self.conf['cl'], prediction['service'])
             self.plot_clustering(prediction['data'], 
                                  prediction['tags'], 
                                  prediction['pred_data'])
-            #self.plot_clustering_tsne(prediction['data'], 
-            #                     prediction['tags'], 
-            #                     prediction['pred_data'])
 
 
     def alert(self):
+        conf = self.conf
         contents = ''
 
         for prediction in self.predictions:
             messages = ''
 
-            if self.cl_conf['use_diff'] == 'True':
-                messages = self.get_anomaly_diff(prediction['tags'], 
-                                 prediction['pred_data'])
+            list_sort = zip(prediction['score_data'],
+                            prediction['tags'],
+                            prediction['pred_data'])
+            list_sorted = sorted(list_sort)
+            score_data, tags, pred_data = zip(*list_sorted)
+
+
+            if conf['cl']['use_diff'] == 'True':
+                messages = self.get_anomaly_diff(tags, pred_data, score_data)
                 if not messages:
                     continue
 
             else:
-                messages = self.get_anomaly(prediction['tags'], 
-                                 prediction['pred_data'])
+                messages = self.get_anomaly(tags, pred_data, score_data)
                 if not messages:
                     continue
 
             contents += '**********************************************************************\n'
-            contents += 'cluster ID: %s\n' % self.cl_conf['name']
-            contents += 'target hosts: %s\n' % self.cl_conf['hosts']
+            contents += 'cluster ID: %s\n' % conf['cl']['name']
+            contents += 'target hosts: %s\n' % conf['cl']['hosts']
             contents += 'target service: %s\n' % prediction['service']
             contents += '**********************************************************************\n'
-            if self.cl_conf['use_diff'] == 'True':
+            if conf['cl']['use_diff'] == 'True':
                 contents += '\n'
                 contents += 'Differences are shown below.\n'
             else:
@@ -152,7 +144,7 @@ class AnomalyAlert:
         message += '\n'
         message += 'The following hosts and servides are currently monitored:\n\n'
 
-        for name in self.conf['DEFAULT']['clusters'].split(','):
+        for name in self.conf['clusters']:
             message += '* %s\n' % self.conf[name]['hosts']
 
             for service in self.conf[name]['services'].split(','):
@@ -175,13 +167,14 @@ class AnomalyAlert:
             smtp.close()
 
 
-    def get_anomaly(self, tags, pred_data):
+    def get_anomaly(self, tags, pred_data, score_data):
+        conf = self.conf
         diff = ''
-        db = Sqlite3Helper(self.db_conf)
+        db = Sqlite3Helper(conf)
 
         counter = 0
 
-        for tag, pred in zip(tags, pred_data):
+        for tag, pred, score in zip(tags, pred_data, score_data):
             if pred != int(const.ABNORMAL):
                 continue
              
@@ -191,10 +184,10 @@ class AnomalyAlert:
                 continue
 
             where = 'tag="%s"' % (tag)
-            field = db.select(where, self.cl_conf)[0]
+            field = db.select(where, conf['cl'])[0]
         
             diff += '======================================================================\n'            
-            diff += field['date'] + ' ' + field['host']
+            diff += field['date'] + ' ' + field['host'] + ' (score=%s)\n' % round(score, 6)
             diff += field['data'] 
             diff += '\n\n'
             diff += '======================================================================\n'            
@@ -206,7 +199,7 @@ class AnomalyAlert:
         return diff
 
 
-    def get_anomaly_diff(self, tags, pred_data):
+    def get_anomaly_diff(self, tags, pred_data, score_data):
         diff = ''
         db = Sqlite3Helper(self.db_conf)
 
@@ -228,6 +221,7 @@ class AnomalyAlert:
                 continue
 
             diff += '======================================================================\n'            
+            diff += '(score=%s)\n' % round(score, 6)
             diff += field['diff'] 
             diff += '\n\n'
             diff += '======================================================================\n'            
@@ -241,17 +235,16 @@ class AnomalyAlert:
 
 
     def plot_clustering(self, data, tags, pred_data):
-        conf = self.cl_conf
-
+        conf = self.conf
         ndim = len(data[0])
-        arbitrary_words = conf['cluster_arbitrary_words']
+        arbitrary_words = conf['cl']['cluster_arbitrary_words']
         arbitrary_dim = 0
         if arbitrary_words != '':
             arbitrary_dim = len(arbitrary_words.split(','))
         vector_dim = ndim - arbitrary_dim
-        if conf['cluster_count_int'] == 'True':
+        if conf['cl']['cluster_count_int'] == 'True':
             vector_dim -= 1
-        if conf['cluster_count_word'] == 'True':
+        if conf['cl']['cluster_count_word'] == 'True':
             vector_dim -= 1
 
         data = np.array(data)
@@ -308,7 +301,7 @@ class AnomalyAlert:
                     axes[iy][ix].set_ylabel(label)
 
         fig.legend([a,b], ['normal events', 'anomaly events'])
-        plt.savefig(self.plot_path)
+        plt.savefig(self.plot_paths['cls'])
 
 
     def plot_clustering_tsne(self, data, tags, pred_data):

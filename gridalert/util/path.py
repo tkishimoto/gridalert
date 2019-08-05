@@ -48,6 +48,6 @@ def model_paths(cl_conf, service):
     return paths
 
 def plot_paths(cl_conf, service):
-    path = {'cls' : plot_path(cl_conf, service),
+    paths = {'cls' : plot_path(cl_conf, service),
             'scan' : plot_scan_path(cl_conf, service)}
     return paths

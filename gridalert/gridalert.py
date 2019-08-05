@@ -110,8 +110,9 @@ class GridAlert:
             sh.scan()     
 
     def plot(self):
-        for cluster in self.clusters:
-            aa = AnomalyAlert(self.conf, cluster)
+        for cluster in self.conf['clusters']:
+            self.conf['cl'] = self.conf[cluster]
+            aa = AnomalyAlert(self.conf)
             aa.predict()
             aa.plot()
 
@@ -137,8 +138,9 @@ class GridAlert:
     def alert(self):
         contents = ''
 
-        for cluster in self.clusters:
-            aa = AnomalyAlert(self.conf, cluster)
+        for cluster in self.conf['clusters']:
+            self.conf['cl'] = self.conf[cluster]
+            aa = AnomalyAlert(self.conf)
             aa.predict()
             contents += aa.alert()
 
