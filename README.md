@@ -92,3 +92,26 @@ The following is an example of the configuration file. [cluster/xxxx] need to be
     text_input = /root/mnt/logwatch/*
     vector_type = doc2vec
     cluster_type = isolationforest
+
+Table of configuration parameters:
+
+|[DEFAULT] section |default  |comment  |
+|---|---|---|
+|base_dir |/tmp/  |path to base directory. ML models and plots will be saved. |
+|date_start|2000-01-01 00:00:00|Date before this parameter is not considered.|
+|date_end|2030-01-01 00:00:00|Date after this parameter is not considered.|
+
+|[db] section |default  |comment  |
+|---|---|---|
+|path |%(base_dir)s/database.db  |path to basebase file (sqlite3). |
+
+|[cluster/xxxx] section |default  |comment  |
+|---|---|---|
+|name || Identical name. |
+|hosts|| Host name. Reguler expression.|
+|services| |Comma separated service name.|
+|text_inoput||path to text logs.|
+|vector_type||Algorithm type for vectorization. |
+|cluster_tyoe||Clustering type for clustering.|
+
+See default.conf for more details.
