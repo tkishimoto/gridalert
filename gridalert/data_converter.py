@@ -8,7 +8,6 @@ from .sqlite3_helper import *
 from .template import *
 
 from .util import match as util_match
-from .util import date as util_date
 from .util import hash as util_hash
 
 class DataConverter:

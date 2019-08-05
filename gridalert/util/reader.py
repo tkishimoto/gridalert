@@ -15,7 +15,6 @@ def get_data_from_sqlite3(db, where, cl_conf):
 
         if cl_conf['vector_split_dot'] == 'True':
             doc = ' '.join(doc.split('.'))
-            print (doc)
 
         data.append(doc)
         tags.append(docs['tag'])

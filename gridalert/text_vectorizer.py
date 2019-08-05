@@ -14,41 +14,38 @@ from .util import path as util_path
 
 class TextVectorizer:
 
-    def __init__(self, conf, cluster):
+    def __init__(self, conf):
 
-        self.conf       = conf
-        self.cluster    = cluster
-
-        self.db_conf    = conf['db']
-        self.cl_conf    = conf[cluster]
-
-        self.service    = ''
-        self.model_path = ''
+        self.conf = conf
+        self.service = ''
+        self.model_paths = ''
 
         self.time = []
 
    
     def vectorize(self):
 
-        for service in self.cl_conf['services'].split(','):
+        conf = self.conf 
+
+        for service in conf['cl']['services'].split(','):
             self.service = service
-            self.model_path = util_path.model_vec_path(self.cl_conf, service)
+            self.model_paths = util_path.model_paths(self.conf['cl'], service)
 
             start = time.time()  
 
-            db = Sqlite3Helper(self.db_conf)
+            db = Sqlite3Helper(conf)
             data, tags = util_reader.get_data_from_sqlite3(db,
                                                       'service="%s"' % service,
-                                                       self.cl_conf)
+                                                       conf['cl'])
             db.close() 
 
             if len(data) == 0:
                 logger.info('No data are selected.')
                 return
 
-            vector_type = self.cl_conf['vector_type'].capitalize() + 'Vector'
-            vector_func = globals()[vector_type](self.cl_conf)
-            vector_func.create_model(data, tags, self.model_path)
+            vector_type = conf['cl']['vector_type'].capitalize() + 'Vector'
+            vector_func = globals()[vector_type](conf['cl'])
+            vector_func.create_model(data, tags, self.model_paths['vec'])
 
             elapsed_time = time.time() - start
             self.time.append({'service':service, 'time':elapsed_time})

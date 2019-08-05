@@ -39,3 +39,15 @@ def plot_scan_path(cl_conf, service):
                                  cl_conf['vector_type'],
                                  cl_conf['cluster_type'])
     return cl_conf['plot_dir'] + '/' + plot
+
+def model_paths(cl_conf, service):
+    paths = {'vec' : model_vec_path(cl_conf, service),
+             'cls' : model_cls_path(cl_conf, service),
+             'scl' : model_scl_path(cl_conf, service),
+             'result' : model_result_path(cl_conf, service)}
+    return paths
+
+def plot_paths(cl_conf, service):
+    path = {'cls' : plot_path(cl_conf, service),
+            'scan' : plot_scan_path(cl_conf, service)}
+    return paths

@@ -91,8 +91,9 @@ class GridAlert:
             lh.labeling()
 
     def vectorize(self):
-        for cluster in self.clusters:
-            tv = TextVectorizer(self.conf, cluster)
+        for cluster in self.conf['clusters']:
+            self.conf['cl'] = self.conf[cluster]
+            tv = TextVectorizer(self.conf)
             tv.vectorize()
    
  
