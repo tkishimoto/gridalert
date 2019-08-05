@@ -99,14 +99,14 @@ Table of configuration parameters:
 
 |parameters |default  |comment  |
 |---|---|---|
-|**[DEFAULT] section***||
+|**[DEFAULT] section**||
 |base_dir |/tmp/  |path to base directory. ML models and plots will be saved. |
 |date_start|2000-01-01 00:00:00|Date before this parameter is not considered.|
 |date_end|2030-01-01 00:00:00|Date after this parameter is not considered.|
 |**[db] section**|||
 |path |%(base_dir)s/database.db  |path to basebase file (sqlite3). |
 |**[cluster/xxxx] section** || |
-|name || Identical name. |
+|name || Identical cluster name. |
 |hosts|| Host name. Reguler expression.|
 |services| |Comma separated service name.|
 |text_input||path to text logs.|
