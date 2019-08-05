@@ -200,8 +200,9 @@ class AnomalyAlert:
 
 
     def get_anomaly_diff(self, tags, pred_data, score_data):
+        conf = self.conf
         diff = ''
-        db = Sqlite3Helper(self.db_conf)
+        db = Sqlite3Helper(conf)
 
         counter = 0
 
@@ -215,7 +216,7 @@ class AnomalyAlert:
                 continue
 
             where = 'tag="%s"' % (tag)
-            field = db.select(where, self.cl_conf)[0]
+            field = db.select(where, conf['cl'])[0]
         
             if not field['diff']:
                 continue
