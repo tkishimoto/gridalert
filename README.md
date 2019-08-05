@@ -7,24 +7,40 @@ gridalert provide methods to detect, alert and visualize anomaly logs using Mach
 Dockerfile is available to build a docker image of the gridalert.
 
     $ git clone https://github.com/tkishimoto/gridalert.git 
-    $ cd gridalert
+    $ cd gridalert/container
     $ docker build -t gridalert .  
     $ docker run --rm --name gridalert -p 8080:8080 -v {YOUR_DATA_DIRECTORY}:/root/mnt/ -it gridalert    
    
-{YOUR_DATA_DIRECTORY} is a directory path, which contains input data and configuration file described below. Please see contents of the Dockerfile if you want to install the gridalert to physical machines.
+{YOUR_DATA_DIRECTORY} is a directory path, which contains input data. Please see contents of the Dockerfile if you want to install the gridalert to physical machines.
 ## Command line interfaces 
-All commands of the gridalert require a configuration file (e.g. conf.ini) for the configparser.
+All commands of the gridalert require a configuration file (e.g. conf.ini) for the configparser. Details of the configuration file are shown in the next section.
 
-    $ gridalert {text,vector,cluster,plot,cherrypy,html,alert,all} -c conf.ini
-    
+    $ gridalert {text, vector, cluster, scan, plot, cherrypy, alert}
+
 * text: extract information from text log files, then store it to database.
+
+A program need to be developed to parse text logs. template/messages_template.py is an example to parse the /var/log/messages files. execute() method recieves a path to text log, and returns a list of data with the following format.
+
+    list  = [data0, data1, data2, ...]
+    dataX = [host,     # host name
+             date,     # timestamp ('%Y-%m-%d %H:%M:%S')
+             service,  # service name (e.g. sshd) 
+             metadata, # additional information if needed
+             data      # log message, 
+             label     # label of data for supervised ML
+
+A logwatch script for Disk Pool Manager(DPM) is available in the logwatch directory. Text analysis programs for the logwatch are also available in the template directory. The following configurations are required for the built in analysis for the DPM.
+
+    [cluster/YOUR_CLUSTER_NAME]    
+    text_type = logwatchfine
+    services = dmlite-httpd,dmlite-xrootd,dmlite-other  
+    
 * vector: vectorize the text logs.
 * cluster: perform vector clustering.
+* scan: scan hyper parameters for vector and cluster
 * plot: make plots.
 * cherrypy: launch cherrypy for visualization.
-* html: make static html files (under development).
-* alert: alert anomaly events (under development).
-* all: do text, vector, cluster, plot, alert.
+* alert: alert anomaly events.
 
 Please see gridalert/main.py if you want to use gridalert module directly.
 
