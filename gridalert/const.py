@@ -20,6 +20,10 @@ class Const:
                        'text', 'text', 'text',
                        'text', 'text']
 
+    # Template fixed parameters
+    LOGPARAMS = ['host', 'date', 'service', 'metadata',
+                   'data', 'label']
+
     # tuning parameters
     MLPARAMS = ['vector_dm', 
                 'vector_size',

@@ -24,8 +24,7 @@ class MessagesTemplate:
             #  May 13 03:10:01 localhost data
             meta = line.split()
 
-            # tag, cluster, host, date, service, metadata, data, label
-            cluster  = self.cl_conf['name']
+            # host, date, service, metadata, data, label
             host     = meta[3]
             date     = util_date.sysdate_to_sqdate('%s %s %s 2019' % (meta[0], 
                                                                       meta[1], 
@@ -38,9 +37,7 @@ class MessagesTemplate:
             label    = '1'
             data     = ' '.join(meta[5:])
 
-            tag      = util_hash.md5(cluster, host, str(date), data)
-        
-            buffers.append([tag, cluster, host, date, service,
+            buffers.append([host, date, service,
                             metadata, data, label])
 
         return buffers

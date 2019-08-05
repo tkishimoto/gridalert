@@ -8,7 +8,7 @@ from ..util import hash as util_hash
 
 class LogwatchTemplate:
 
-    def __init__(self, cl_conf):
+    def __init__(self, conf):
 
         self.metadata_keys = [] # [[start, end]]
         self.metadata_keys.append(['Logfiles for Host:', '\n'])
@@ -25,11 +25,11 @@ class LogwatchTemplate:
         self.service_keys = [] # [[start, end]]
         self.service_names = [] 
 
-        self.cl_conf = cl_conf
+        self.conf = conf
 
 
     def initialize(self):
-        for service in self.cl_conf['services'].split(','):                  
+        for service in self.conf['cl']['services'].split(','):                  
  
             if (service == 'cron'): 
                 self.service_keys.append(['- Cron Begin -', 
@@ -108,7 +108,7 @@ class LogwatchTemplate:
 
 
     def extract(self, lines):
-        # shoud return lists of 'tag', 'cluster', 'host', 'date',
+        # shoud return lists of 'host', 'date',
         #              'service', 'metadata', 'data', 'label'  
 
         buffers = []
@@ -134,15 +134,13 @@ class LogwatchTemplate:
             if data == '':
                 data = 'unknown'
 
-            # tag, cluster, host, date, service, metadata, data, label
-            cluster  = self.cl_conf['name']
+            # cluster, host, date, service, metadata, data, label
             host     = meta['host']
             date     = meta['date']
             service  = self.service_names[ii]
             metadata = 'range=%s,level=%s' % (meta['range'], meta['level'])
             label    = '1'
-            tag      = util_hash.md5([cluster, host, str(date), service, data])
-            buffers.append([tag, cluster, host, date, service, 
+            buffers.append([host, date, service, 
                             metadata, data, label])
 
         return buffers

@@ -6,14 +6,17 @@ from .logwatch_template import *
 
 class LogwatchfineTemplate(LogwatchTemplate):
 
-    def __init__(self, cl_conf):
-        super().__init__(cl_conf)
+    def __init__(self, conf):
+        super().__init__(conf)
 
 
     def initialize(self):
-        for service in self.cl_conf['services'].split(','):                  
+        for service in self.conf['cl']['services'].split(','):                  
  
-            if (service == 'dmlite'): 
+            if ('dmlite' in service): 
+                if ('dmlite' in self.service_names):
+                    continue
+
                 self.service_keys.append(['- dmlite Begin -', 
                                           '- dmlite End -'])
                 self.service_names.append('dmlite')
@@ -50,7 +53,7 @@ class LogwatchfineTemplate(LogwatchTemplate):
 
 
     def extract(self, lines):
-        # shoud return lists of 'tag', 'cluster', 'host', 'date',
+        # shoud return lists of 'cluster', 'host', 'date',
         #              'service', 'metadata', 'data', 'label'  
 
         buffers = []
@@ -77,7 +80,7 @@ class LogwatchfineTemplate(LogwatchTemplate):
                 data = 'unknown'
                 continue 
 
-            # tag, cluster, host, date, service, metadata, data, label
+            # cluster, host, date, service, metadata, data, label
             service  = self.service_names[ii]
 
             if service == 'dmlite':
@@ -109,15 +112,13 @@ class LogwatchfineTemplate(LogwatchTemplate):
                 service = 'dmlite-other'
                 continue
 
-            # tag, cluster, host, date, service, metadata, data, label
-            cluster  = self.cl_conf['name']
+            # host, date, service, metadata, data, label
             host     = meta['host']
             date     = meta['date']
             metadata = 'range=%s,level=%s' % (meta['range'], meta['level'])
             label    = '1'
-            tag      = util_hash.md5([cluster, host, str(date), service, line])
 
-            buffers.append([tag, cluster, host, date, service,
+            buffers.append([host, date, service,
                             metadata, line, label])
         return buffers
 
@@ -157,15 +158,13 @@ class LogwatchfineTemplate(LogwatchTemplate):
         login_buffer.append(header + login)
 
         for login in login_buffer:
-            # tag, cluster, host, date, service, metadata, data, label
-            cluster  = self.cl_conf['name']
+            # host, date, service, metadata, data, label
             host     = meta['host']
             date     = meta['date']
             metadata = 'range=%s,level=%s' % (meta['range'], meta['level'])
             label    = '1'
-            tag      = util_hash.md5([cluster, host, str(date), service, login])
 
-            buffers.append([tag, cluster, host, date, service,
+            buffers.append([host, date, service,
                             metadata, login, label])
         return buffers
 

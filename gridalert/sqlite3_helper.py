@@ -9,13 +9,13 @@ from .const import Const as const
 
 class Sqlite3Helper:
 
-    def __init__(self, db_conf):
+    def __init__(self, conf):
 
         self.table_name = const.DB_TABLE_NAME
         self.column_names = const.DB_COLUMN_NAMES
         self.column_types = const.DB_COLUMN_TYPES
 
-        self.conn = sqlite3.connect(db_conf['path'], timeout=600)
+        self.conn = sqlite3.connect(conf['db']['path'], timeout=600)
         self.conn.row_factory = sqlite3.Row
         self.cur = self.conn.cursor()
 
