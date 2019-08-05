@@ -29,7 +29,7 @@ A program need to be developed to parse text logs. template/messages_template.py
              data      # log message, 
              label     # label of data for supervised ML
 
-A logwatch script for Disk Pool Manager(DPM) is available in the logwatch directory. Text analysis programs for the logwatch are also available in the template directory. The following configurations are required for the built in analysis for the DPM.
+A logwatch script for Disk Pool Manager(DPM)for Grid site operation is available in the logwatch directory. Text analysis programs for the logwatch are also available in the template directory. The following configurations are required for the built in analysis for the DPM.
 
     [cluster/YOUR_CLUSTER_NAME]    
     text_type = logwatchfine
