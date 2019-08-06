@@ -64,6 +64,19 @@ for line in lines:
         if re.match('\d+\)', word): 
             word = 'NUMBER)'
 
+        if re.match('\'\d+\-..\'', word): 
+            word = 'FILE_KEY'
+
+        # ATLAS experiment
+        if re.match('.*\.pool\.root.*', word): 
+            word = 'FILE_POOL_ROOT'
+
+        if re.match('.*\.job\.log\.tgz.*', word):
+            word = 'FILE_LOG_TGZ'
+
+        if re.match('.*\.pic\.gz.*', word):
+            word = 'FILE_PIC_GZ'
+
         if re.match('\d+\:\'.*\'', word): 
             word = 'FILE_NAME'
 
@@ -73,8 +86,11 @@ for line in lines:
         if re.match('\'(data|user|group|panda|log|NTUP|AOD|DAOD|EVNT|ESD|DESD|HITS|RDO|output|test)\..*\'', word):
             word = 'FILE_NAME'
 
-        if re.match('\'\d+\-..\'', word): 
-            word = 'FILE_KEY'
+        if re.match('.*(data|user|group|panda|log|NTUP|AOD|DAOD|EVNT|ESD|DESD|HITS|RDO|output|test)\..*\.root\..*', word):
+            word = 'FILE_NAME'
+
+        if re.match('.*testfile.*ATLAS.*', word):
+            word = 'ATLAS_TEST_FILE'
 
         data_filter = data_filter + ' ' + word 
 

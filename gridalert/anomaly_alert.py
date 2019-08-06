@@ -206,7 +206,7 @@ class AnomalyAlert:
 
         counter = 0
 
-        for tag, pred in zip(tags, pred_data):
+        for tag, pred, score in zip(tags, pred_data, score_data):
             if pred != int(const.ABNORMAL):
                 continue
              
