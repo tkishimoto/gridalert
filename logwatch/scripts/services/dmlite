@@ -92,6 +92,10 @@ for line in lines:
         if re.match('.*testfile.*ATLAS.*', word):
             word = 'ATLAS_TEST_FILE'
 
+        # ICEPP
+        word = re.sub(r'data\d\d', 'dataXX', word)
+        word = re.sub(r'lcg\-fs\d\d\d', 'lcg-fsXXX', word)
+
         data_filter = data_filter + ' ' + word 
 
 
