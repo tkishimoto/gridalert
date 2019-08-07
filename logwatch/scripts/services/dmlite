@@ -95,6 +95,7 @@ for line in lines:
         # ICEPP
         word = re.sub(r'data\d\d', 'dataXX', word)
         word = re.sub(r'lcg\-fs\d\d\d', 'lcg-fsXXX', word)
+        word = re.sub(r'20\d\d\-\d\d\-\d\d', '20XX-XX-XX', word)
 
         data_filter = data_filter + ' ' + word 
 
