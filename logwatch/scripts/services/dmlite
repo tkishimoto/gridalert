@@ -69,7 +69,10 @@ for line in lines:
 
         # ATLAS experiment
         if re.match('.*\.pool\.root.*', word): 
-            word = 'FILE_POOL_ROOT'
+            word = 'FILE_ROOT'
+
+        if re.match('.*\.root\.rucio.*', word): 
+            word = 'FILE_ROOT'
 
         if re.match('.*\.job\.log\.tgz.*', word):
             word = 'FILE_LOG_TGZ'
