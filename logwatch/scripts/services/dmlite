@@ -35,10 +35,10 @@ for line in lines:
             word = 'DPM_LFN'  
 
         if re.match('\'\/.*\/\d{4}-\d{2}-\d{2}\/.*\'', word):
-            word = 'DPM_TURL'  
+            word = 'DPM_LFN'  
 
         if re.match('\/.*\/\d{4}-\d{2}-\d{2}\/.*', word):
-            word = 'DPM_TURL'  
+            word = 'DPM_LFN'  
 
         if '[0x' in word:
             word = 'HEXNUMBNER'
@@ -69,18 +69,24 @@ for line in lines:
 
         # ATLAS experiment
         if re.match('.*\.pool\.root.*', word): 
-            word = 'FILE_ROOT'
+            word = 'FILE_NAME'
 
         if re.match('.*\.root\.rucio.*', word): 
-            word = 'FILE_ROOT'
+            word = 'FILE_NAME'
+
+        if re.match('.*\.root', word): 
+            word = 'FILE_NAME'
 
         if re.match('.*\.job\.log\.tgz.*', word):
-            word = 'FILE_LOG_TGZ'
+            word = 'FILE_NAME'
 
         if re.match('.*\.pic\.gz.*', word):
-            word = 'FILE_PIC_GZ'
+            word = 'FILE_NAME'
 
         if re.match('\d+\:\'.*\'', word): 
+            word = 'FILE_NAME'
+
+        if re.match('.*\/20\d\d\-\d\d\-\d\d\/user\..*', word): 
             word = 'FILE_NAME'
 
         if re.match('(data|user|group|panda|log|NTUP|AOD|DAOD|EVNT|ESD|DESD|HITS|RDO|output|test).*\)\.', word): 
@@ -93,7 +99,10 @@ for line in lines:
             word = 'FILE_NAME'
 
         if re.match('.*testfile.*ATLAS.*', word):
-            word = 'ATLAS_TEST_FILE'
+            word = 'FILE_NAME'
+
+        if re.match('smoke-test-.*', word):
+            word = 'FILE_NAME'
 
         # ICEPP
         word = re.sub(r'data\d\d', 'dataXX', word)
