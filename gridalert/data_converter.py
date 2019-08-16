@@ -37,9 +37,8 @@ class DataConverter:
 
             logger.info('process (%s/%s) %s' % (ii+1, len(texts), text))
 
-            # template should return ['host', 'date', 
-            #                         'service', 'metadata',]
-            #                         'data', 'label'
+            # template should return ['host', 'date', 'service', 
+            #                         'metadata', 'data', 'label']
 
             for buffer in template.execute(text):
 
@@ -53,11 +52,8 @@ class DataConverter:
                     continue
      
                 # tag
-                tag = util_hash.md5([cluster,
-                                     host, 
-                                     str(date), 
-                                     service, 
-                                     data])
+                tag = util_hash.md5([cluster, host, str(date), 
+                                     service, data])
                 buffer = [tag, cluster] + buffer 
 
                 # prediction, feature, diff

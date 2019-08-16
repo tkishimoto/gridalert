@@ -62,5 +62,4 @@ class Const:
                 'cluster_min_samples',
                 'cluster_metric',
                 'cluster_algorithm',
-                'cluster_leaf_size',
-                'cluster_normalize' ]               
+                'cluster_leaf_size']               

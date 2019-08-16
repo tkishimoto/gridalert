@@ -54,7 +54,6 @@ class AnomalyAlert:
             vector_type = conf['cl']['vector_type'].capitalize() + 'Vector'
             vector_func = globals()[vector_type](conf['cl'])
             data = vector_func.get_vector(docs, self.model_paths['vec'])
-            data = vector_func.add_dimensions(data, docs)
 
             cluster_type = conf['cl']['cluster_type'].capitalize() + 'Cluster'
             cluster_func = globals()[cluster_type](conf['cl'])
@@ -238,15 +237,6 @@ class AnomalyAlert:
     def plot_clustering(self, data, tags, pred_data):
         conf = self.conf
         ndim = len(data[0])
-        arbitrary_words = conf['cl']['cluster_arbitrary_words']
-        arbitrary_dim = 0
-        if arbitrary_words != '':
-            arbitrary_dim = len(arbitrary_words.split(','))
-        vector_dim = ndim - arbitrary_dim
-        if conf['cl']['cluster_count_int'] == 'True':
-            vector_dim -= 1
-        if conf['cl']['cluster_count_word'] == 'True':
-            vector_dim -= 1
 
         data = np.array(data)
         fig, axes = plt.subplots(nrows=ndim, ncols=ndim)
@@ -284,21 +274,9 @@ class AnomalyAlert:
 
                 if (iy == (ndim-1)):
                     label = 'Feature %s' % ix
-                    if (ix+1) > (vector_dim + arbitrary_dim + 1):
-                        label = 'Word count'
-                    elif (ix+1) > (vector_dim + arbitrary_dim):
-                        label = 'Int count'
-                    elif (ix+1) > vector_dim:
-                        label = 'Arbitrary %s' % (ix-vector_dim)
                     axes[iy][ix].set_xlabel(label)
                 if (ix == (0)):
                     label = 'Feature %s' % iy
-                    if (iy+1) > (vector_dim + arbitrary_dim + 1):
-                        label = 'Word count'
-                    elif (iy+1) > (vector_dim + arbitrary_dim):
-                        label = 'Int count'
-                    elif (iy+1) > vector_dim:
-                        label = 'Arbitrary %s' % (iy-vector_dim)
                     axes[iy][ix].set_ylabel(label)
 
         fig.legend([a,b], ['normal events', 'anomaly events'])

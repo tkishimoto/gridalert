@@ -49,7 +49,6 @@ class VectorCluster:
             vector_type = conf['cl']['vector_type'].capitalize() + 'Vector'
             vector_func = globals()[vector_type](conf['cl'])
             data = vector_func.get_vector(docs, self.model_paths['vec'])
-            data = vector_func.add_dimensions(data, docs)
 
             cluster_type = conf['cl']['cluster_type'].capitalize() + 'Cluster'
             cluster_func = globals()[cluster_type](conf['cl'])
