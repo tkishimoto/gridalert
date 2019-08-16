@@ -19,18 +19,6 @@ class DataConverter:
 
     def text_to_db(self):
 
-        db_type = self.conf['db']['type'] 
-
-        func = getattr(self, "text_to_%s" % db_type, None)
-        if func is not None:
-            func()
-
-        else:
-            logger.info('%s not supported' % db_type)
- 
-
-    def text_to_sqlite3(self): 
-
         conf = self.conf
 
         class_name = conf['cl']['text_type'].capitalize() + 'Template'
