@@ -14,8 +14,16 @@ class LabelHelper:
         self.conf       = conf
         self.service    = ''
 
-
+   
     def labeling(self):
+        conf = self.conf
+        
+        for service in conf['cl']['services'].split(','):
+            self.service = service
+            self.label_sqlite3()
+
+
+    def label_sqlite3(self):
         db   = Sqlite3Helper(self.conf)
         where = 'service="%s"' % self.service
         results = db.select(where=where)
