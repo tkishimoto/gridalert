@@ -21,8 +21,16 @@ class Doc2vecVector(BaseVector):
                              tags=[tag]))
 
         cl_conf = self.cl_conf
-        model = Doc2Vec(documents = trainings, 
-                        dm = int(cl_conf['vector_dm']),
+    
+        update = False
+        if cl_conf['vector_update'] == 'True':
+            update = True
+
+        if update:
+            model = Doc2Vec.load(model_path)
+        
+        else:
+            model = Doc2Vec(dm = int(cl_conf['vector_dm']),
                         vector_size = int(cl_conf['vector_size']),
                         window = int(cl_conf['vector_window']),
                         alpha = float(cl_conf['vector_alpha']),
@@ -39,6 +47,11 @@ class Doc2vecVector(BaseVector):
                         dm_concat = int(cl_conf['vector_dm_concat']),
                         dm_tag_count = int(cl_conf['vector_dm_tag_count']),
                         dbow_words = int(cl_conf['vector_dbow_words']))
+
+        model.build_vocab(trainings, update=update)
+        model.train(trainings,
+                    total_examples=model.corpus_count,
+                    epochs=model.epochs)
 
         model.save(model_path)
 
