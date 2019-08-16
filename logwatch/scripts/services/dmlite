@@ -3,11 +3,7 @@ import sys
 import re
 lines = sys.stdin.readlines()
 
-services = ['httpd', 'xrootd', 'other']
 messages = {}
-
-for service in services:
-    messages[service] =  {}
 
 for line in lines:
     process = line.split()[4]
@@ -20,6 +16,8 @@ for line in lines:
         process = 'httpd'
     elif 'xrootd' in process:
         process = 'xrootd'
+    elif 'globus-gridftp-server' in process:
+        process = 'globus-gridftp-server'
     else:
         process = 'other'
 
@@ -35,10 +33,10 @@ for line in lines:
             word = 'DPM_LFN'  
 
         if re.match('\'\/.*\/\d{4}-\d{2}-\d{2}\/.*\'', word):
-            word = 'DPM_LFN'  
+            word = 'DPM_TURL'  
 
         if re.match('\/.*\/\d{4}-\d{2}-\d{2}\/.*', word):
-            word = 'DPM_LFN'  
+            word = 'DPM_TURL'  
 
         if '[0x' in word:
             word = 'HEXNUMBNER'
@@ -69,24 +67,15 @@ for line in lines:
 
         # ATLAS experiment
         if re.match('.*\.pool\.root.*', word): 
-            word = 'FILE_NAME'
-
-        if re.match('.*\.root\.rucio.*', word): 
-            word = 'FILE_NAME'
-
-        if re.match('.*\.root', word): 
-            word = 'FILE_NAME'
+            word = 'FILE_POOL_ROOT'
 
         if re.match('.*\.job\.log\.tgz.*', word):
-            word = 'FILE_NAME'
+            word = 'FILE_LOG_TGZ'
 
         if re.match('.*\.pic\.gz.*', word):
-            word = 'FILE_NAME'
+            word = 'FILE_PIC_GZ'
 
         if re.match('\d+\:\'.*\'', word): 
-            word = 'FILE_NAME'
-
-        if re.match('.*\/20\d\d\-\d\d\-\d\d\/user\..*', word): 
             word = 'FILE_NAME'
 
         if re.match('(data|user|group|panda|log|NTUP|AOD|DAOD|EVNT|ESD|DESD|HITS|RDO|output|test).*\)\.', word): 
@@ -99,10 +88,7 @@ for line in lines:
             word = 'FILE_NAME'
 
         if re.match('.*testfile.*ATLAS.*', word):
-            word = 'FILE_NAME'
-
-        if re.match('smoke-test-.*', word):
-            word = 'FILE_NAME'
+            word = 'ATLAS_TEST_FILE'
 
         # ICEPP
         word = re.sub(r'data\d\d', 'dataXX', word)
@@ -112,22 +98,20 @@ for line in lines:
         data_filter = data_filter + ' ' + word 
 
 
-    if data_filter in messages[process].keys():
-        messages[process][data_filter] += 1
+    data_filter = process + ' : ' + data_filter 
+
+    if data_filter in messages.keys():
+        messages[data_filter] += 1
     else:
-        messages[process][data_filter] = 1
+        messages[data_filter] = 1
 
 
-for service in services:
-    messages_sorted = sorted(messages[service].items(), 
+messages_sorted = sorted(messages.items(), 
                              key=lambda x:-x[1])
+for data in messages_sorted:
+    count = str(data[1]).rjust(8)
+    message = data[0] 
 
-    print ('Process %s:' % service)
+    print ('%s time(s) : %s' % (count, message))
 
-    for data in messages_sorted:
-        count = str(data[1]).rjust(8)
-        message = data[0] 
-
-        print ('%s time(s) : %s' % (count, message))
-
-    print ('\n')
+print ('\n')

@@ -94,7 +94,7 @@ class LogwatchfineTemplate(LogwatchTemplate):
 
     def dmlite(self, meta, data):
         buffers = []
-        service = 'dmlite-httpd'
+        service = 'dmlite'
 
         lines = data.split('\n')
         for line in lines:
@@ -102,22 +102,11 @@ class LogwatchfineTemplate(LogwatchTemplate):
             if line.replace(' ', '').replace('\n', '') == '':
                 continue
 
-            if 'Process httpd:' in line:
-                service = 'dmlite-httpd'
-                continue
-            if 'Process xrootd:' in line:
-                service = 'dmlite-xrootd'
-                continue
-            if 'Process other:' in line:
-                service = 'dmlite-other'
-                continue
-
             # host, date, service, metadata, data, label
             host     = meta['host']
             date     = meta['date']
             metadata = 'range=%s,level=%s' % (meta['range'], meta['level'])
             label    = '1'
-
             buffers.append([host, date, service,
                             metadata, line, label])
         return buffers
