@@ -16,22 +16,6 @@ class LabelHelper:
 
 
     def labeling(self):
-        conf = self.conf
-
-        for service in conf['cl']['services'].split(','):
-            self.service = service
-        
-            db_type = conf['db']['type']
-
-            func = getattr(self, "label_%s" % db_type, None)
-            if func is not None:
-                func()
-
-            else:
-                logger.info('%s not supported' % db_type)
-                        
-   
-    def label_sqlite3(self):
         db   = Sqlite3Helper(self.conf)
         where = 'service="%s"' % self.service
         results = db.select(where=where)
