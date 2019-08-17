@@ -102,6 +102,9 @@ class LogwatchfineTemplate(LogwatchTemplate):
             if line.replace(' ', '').replace('\n', '') == '':
                 continue
 
+            if not 'time(s)' in line:
+                continue
+
             # host, date, service, metadata, data, label
             host     = meta['host']
             date     = meta['date']
