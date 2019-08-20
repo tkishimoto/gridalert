@@ -69,7 +69,7 @@ for line in lines:
         if re.match('.*\.pool\.root.*', word): 
             word = 'FILE_NAME'
 
-        if re.match('.*\.job\.log\.tgz.*', word):
+        if re.match('.*\.log\.tgz.*', word):
             word = 'FILE_NAME'
 
         if re.match('.*\.pic\.gz.*', word):
