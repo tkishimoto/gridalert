@@ -1,3 +1,5 @@
+import numsimword
+
 def num_to_word(num):
     # convert numbers to japanese
     nums_00_10 = ['zero','ichi','ni','san','yon','go',
@@ -52,15 +54,17 @@ def extract_mline(lines, key1, key2):
     return data
 
 
-def filter_doc(doc):
+def filter_doc(doc, digit, bit):
     # filter and edit documnets
 
     filtered = []
 
+    numword = numsimword.NumsimWord(digit, bit)
+
     words = doc.split()
     for word in words:
         if word.isdigit():
-            word = num_to_word(int(word)) + ' ' + word
+            word = numword.get_sim_word(int(word)) + ' ' + word
 
         filtered.append(word)
 
