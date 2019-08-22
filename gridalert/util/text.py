@@ -59,12 +59,14 @@ def filter_doc(doc, digit, bit):
 
     filtered = []
 
-    numword = numsimword.NumsimWord(digit, bit)
+    numword = numsimword.NumsimWord()
+    numword.max_digit = digit
+    numword.max_bit = bit
 
     words = doc.split()
     for word in words:
         if word.isdigit():
-            word = numword.get_sim_word(int(word)) + ' ' + word
+            word = numword.get_digit_word(int(word)) + ' ' + word
 
         filtered.append(word)
 
