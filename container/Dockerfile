@@ -11,11 +11,18 @@ RUN yum install -y epel-release && \
     yum install -y python36-pip && \
     pip3.6 install pip --upgrade
 
-RUN git clone https://github.com/facebookresearch/fastText.git && \
+RUN cd / && \
+    git clone https://github.com/facebookresearch/fastText.git && \
     cd fastText && \
-    pip3.6 install .
+    pip3.6 install . 
 
-RUN git clone https://github.com/tkishimoto/gridalert.git && \
+RUN cd / && \
+    git clone https://github.com/tkishimoto/numsimword.git && \
+    cd numsimword && \
+    pip3.6 install -e . 
+
+RUN cd / && \
+    git clone https://github.com/tkishimoto/gridalert.git && \
     cd gridalert && \
     pip3.6 install -e . && \
     cp logwatch/conf/logfiles/* /etc/logwatch/conf/logfiles/ && \

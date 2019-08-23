@@ -17,6 +17,10 @@ From: centos:7
     cd fastText 
     pip3.6 install .
 
+    git clone https://github.com/tkishimoto/numsimword.git 
+    cd numsimword 
+    pip3.6 install -e . 
+
     git clone https://github.com/tkishimoto/gridalert.git 
     cd gridalert 
     pip3.6 install -e . 
