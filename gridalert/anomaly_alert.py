@@ -5,6 +5,7 @@ logger = getLogger(__name__)
 import os
 import pickle
 import numpy as np
+import pydotplus as pdp
 
 import matplotlib
 matplotlib.use('Agg')
@@ -23,6 +24,8 @@ from .const import Const as const
 import smtplib
 from email.mime.text import MIMEText
 from sklearn.manifold import TSNE
+from ifgraphviz.ifgraphviz import export_if_text
+from ifgraphviz.ifgraphviz import export_if_graphviz
 
 class AnomalyAlert:
 
@@ -85,6 +88,8 @@ class AnomalyAlert:
             self.plot_clustering(prediction['data'], 
                                  prediction['tags'], 
                                  prediction['pred_data'])
+            self.plot_tree(prediction['data'], 
+                           prediction['pred_data'])
 
 
     def alert(self):
@@ -289,3 +294,17 @@ class AnomalyAlert:
         print (X_reduced[:, 0], pred_data)
         plt.scatter(X_reduced[:, 0], X_reduced[:, 1], c=pred_data)
         plt.savefig('/root/mnt/test.png')
+
+
+    def plot_tree(self, data, pred_data):
+        model = pickle.load(open(self.model_paths['cls'], 'rb'))
+        dot_data = export_if_graphviz(model,
+                   data,
+                   pred_data)
+        graph = pdp.graph_from_dot_data(dot_data)
+        graph.write_png(self.plot_paths['tree'])
+
+        dot_data = export_if_text(model,
+                                  data,
+                                  pred_data)
+ 

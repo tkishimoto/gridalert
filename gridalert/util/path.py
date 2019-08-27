@@ -33,6 +33,13 @@ def plot_path(cl_conf, service):
                                  cl_conf['cluster_type'])
     return cl_conf['plot_dir'] + '/' + plot
 
+def plot_tree_path(cl_conf, service):
+    plot = '%s.%s.%s.%s.tree.png' % (cl_conf['name'],
+                                 service,
+                                 cl_conf['vector_type'],
+                                 cl_conf['cluster_type'])
+    return cl_conf['plot_dir'] + '/' + plot
+
 def plot_scan_path(cl_conf, service):
     plot = '%s.%s.%s.%s.scan.png' % (cl_conf['name'],
                                  service,
@@ -49,5 +56,6 @@ def model_paths(cl_conf, service):
 
 def plot_paths(cl_conf, service):
     paths = {'cls' : plot_path(cl_conf, service),
-            'scan' : plot_scan_path(cl_conf, service)}
+            'scan' : plot_scan_path(cl_conf, service),
+            'tree' : plot_tree_path(cl_conf, service)}
     return paths
