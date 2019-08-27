@@ -9,6 +9,7 @@ RUN yum install -y epel-release && \
     yum install -y python36 && \
     yum install -y python36-devel && \
     yum install -y python36-pip && \
+    yum install -y graphviz && \
     pip3.6 install pip --upgrade
 
 RUN cd / && \
@@ -18,6 +19,11 @@ RUN cd / && \
 
 RUN cd / && \
     git clone https://github.com/tkishimoto/numsimword.git && \
+    cd numsimword && \
+    pip3.6 install -e . 
+
+RUN cd / && \
+    git clone https://github.com/tkishimoto/ifgraphviz.git && \
     cd numsimword && \
     pip3.6 install -e . 
 
