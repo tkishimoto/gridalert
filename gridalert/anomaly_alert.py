@@ -24,7 +24,7 @@ from .const import Const as const
 import smtplib
 from email.mime.text import MIMEText
 from sklearn.manifold import TSNE
-from ifgraphviz.ifgraphviz import export_if_text
+from ifgraphviz.ifgraphviz import export_if_meta_data
 from ifgraphviz.ifgraphviz import export_if_graphviz
 
 class AnomalyAlert:
@@ -63,6 +63,7 @@ class AnomalyAlert:
             pred_data, score_data = cluster_func.predict(data, self.model_paths['cls'])
 
             pred_dict = {'service': service,
+                         'docs': docs,
                          'data': data,
                          'tags': tags,
                          'pred_data': pred_data,
@@ -89,7 +90,8 @@ class AnomalyAlert:
                                  prediction['tags'], 
                                  prediction['pred_data'])
             self.plot_tree(prediction['data'], 
-                           prediction['pred_data'])
+                           prediction['pred_data'],
+                           prediction['docs'])
 
 
     def alert(self):
@@ -296,7 +298,7 @@ class AnomalyAlert:
         plt.savefig('/root/mnt/test.png')
 
 
-    def plot_tree(self, data, pred_data):
+    def plot_tree(self, data, pred_data, docs):
         model = pickle.load(open(self.model_paths['cls'], 'rb'))
         dot_data = export_if_graphviz(model,
                    data,
@@ -304,7 +306,26 @@ class AnomalyAlert:
         graph = pdp.graph_from_dot_data(dot_data)
         graph.write_png(self.plot_paths['tree'])
 
-        dot_data = export_if_text(model,
+        meta_data = export_if_meta_data(model,
                                   data,
                                   pred_data)
- 
+
+        logger.info('features and thresholds for anomalies')
+        for key, values in meta_data.items():
+            logger.info(' +-- node index %s' % key)
+            logger.info('  +-- data contents:')
+         
+            for ii in values[3]:
+                logger.info('   +-- index %s: %s ' % (ii, docs[ii]))
+
+            logger.info('  +-- feature threshold:')
+
+            for threshold, feature, direction in zip(values[0][:-1],
+                                      values[1][:-1],
+                                      values[2][1:]):
+                arrow = '<='
+                if direction == False:
+                    arrow = '> '
+                logger.info('   +-- feature %s %s %s' % (feature,
+                                                     arrow,
+                                                 threshold)) 
