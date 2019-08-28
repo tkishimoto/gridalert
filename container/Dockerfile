@@ -24,7 +24,7 @@ RUN cd / && \
 
 RUN cd / && \
     git clone https://github.com/tkishimoto/ifgraphviz.git && \
-    cd numsimword && \
+    cd ifgraphviz && \
     pip3.6 install -e . 
 
 RUN cd / && \
