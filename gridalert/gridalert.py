@@ -14,6 +14,7 @@ from .vector_cluster import *
 from .data_visualizer import *
 from .anomaly_alert import *
 from .scan_helper import *
+from .sts_similarity import *
 
 from .const import Const as const
 from .util import hash as util_hash
@@ -104,6 +105,12 @@ class GridAlert:
             self.conf['cl'] = self.conf[cluster]
             vc = VectorCluster(self.conf)
             vc.clustering()
+
+    def sts(self):
+        for cluster in self.conf['clusters']:
+            self.conf['cl'] = self.conf[cluster]
+            ss = StsSimilarity(self.conf)
+            ss.similarity()
 
    
     def scan(self):
