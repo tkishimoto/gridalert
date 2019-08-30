@@ -81,6 +81,11 @@ class LogwatchTemplate:
                                           '- Disk Space End -'])
                 self.service_names.append('disk_space')
 
+            elif (service == 'dmlite'):
+                self.service_keys.append(['- dmlite Begin -', 
+                                          '- dmlite End -'])
+                self.service_names.append('dmlite')
+
             else:
                 logger.info('%s not supported' % (service))
            

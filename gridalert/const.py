@@ -25,7 +25,7 @@ class Const:
                    'data', 'label']
 
     # tuning parameters
-    MLPARAMS = ['vector_dm', 
+    MLVECPARAMS = ['vector_dm', 
                 'vector_size',
                 'vector_window',
                 'vector_alpha',
@@ -49,8 +49,9 @@ class Const:
                 'vector_word_ngrams',
                 'vector_loss',
                 'vector_bucket',
-                'vector_lr_update_rate',
-                'cluster_n_estimators', 
+                'vector_lr_update_rate',]
+
+    MLCLSPARAMS = ['cluster_n_estimators', 
                 'cluster_max_samples',
                 'cluster_contamination',
                 'cluster_max_features',
@@ -62,4 +63,6 @@ class Const:
                 'cluster_min_samples',
                 'cluster_metric',
                 'cluster_algorithm',
-                'cluster_leaf_size']               
+                'cluster_leaf_size']      
+
+    MLPARAMS = MLVECPARAMS + MLCLSPARAMS         

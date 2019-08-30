@@ -36,7 +36,7 @@ class ScanHelper:
         conf = self.conf
         params = []
 
-        for param in const.MLPARAMS:
+        for param in const.MLVECPARAMS:
             params.append(self.cl_conf[param].split(','))
 
         counter = 0
@@ -48,7 +48,7 @@ class ScanHelper:
         for param in product(*params):
             for ii, value in enumerate(param):
                 self.conf.set(self.cluster,
-                              const.MLPARAMS[ii],
+                              const.MLVECPARAMS[ii],
                               value)
             hash = util_hash.md5([self.cluster] + list(param))
             hash_dir = self.cl_conf['base_dir'] + '/' + hash
@@ -108,7 +108,7 @@ class ScanHelper:
 
     def scan_process(self, param, conf, cluster):
         for ii, value in enumerate(param):
-            key = const.MLPARAMS[ii]
+            key = const.MLVECPARAMS[ii]
             logger.info('%s : %s' % (key, conf[cluster][key]))
 
         os.makedirs(conf[cluster]['model_dir'], exist_ok=True)
@@ -121,19 +121,32 @@ class ScanHelper:
 
 
         tv = TextVectorizer(myconf)
-        vc = VectorCluster(myconf)
-
         tv.vectorize()
-        vc.clustering()
-
         tv_time = tv.get_time()
-        vc_time = vc.get_time()
 
+        clsparams = []
+
+        for clsparam in const.MLCLSPARAMS:
+            clsparams.append(self.cl_conf[clsparam].split(','))
+
+        args = []
         acc = []
-        for ii, acc_tmp in enumerate(vc.get_accuracy()):
-            acc_tmp['vector_time'] = tv_time[ii]['time']      
-            acc_tmp['cluster_time'] = vc_time[ii]['time']      
-            acc.append(acc_tmp)
+
+        for clsparam in product(*clsparams):
+            for ii, value in enumerate(clsparam):
+                conf.set(cluster,
+                         const.MLCLSPARAMS[ii],
+                         value)
+            myconf['cl'] = conf[cluster]
+
+            vc = VectorCluster(myconf)
+            vc.clustering()
+            vc_time = vc.get_time()
+
+            for ii, acc_tmp in enumerate(vc.get_accuracy()):
+                acc_tmp['vector_time'] = tv_time[ii]['time']      
+                acc_tmp['cluster_time'] = vc_time[ii]['time']      
+                acc.append(acc_tmp)
 
         shutil.rmtree(conf[cluster]['model_dir'])       
   
