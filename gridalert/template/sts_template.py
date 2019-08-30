@@ -34,17 +34,18 @@ class StsTemplate:
             data1     = meta[6]
 
             if 'dev' in text:
-                metadata = 'dev'
+                service = 'dev'
+
             elif 'test' in text:
-                metadata = 'test'
+                service = 'test'
+
             elif 'train' in text:
-                metadata = 'train'
+                service = 'train'
 
             buffers.append([host, date, service,
                             metadata, data0, label])
 
             buffers.append([host, date, service,
                             metadata, data1, label])
-
         return buffers
 

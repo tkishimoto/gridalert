@@ -74,3 +74,16 @@ class Doc2vecVector(BaseVector):
 
         return data
 
+
+    def get_similarity(self, docs0, docs1, model_path):
+        data = []
+
+        model = Doc2Vec.load(model_path)
+        model.random.seed(int(self.cl_conf['vector_seed']))
+
+        for doc0, doc1 in zip(docs0, docs1):
+            result = model.docvecs.similarity_unseen_docs(model,
+                                 doc0.split(), 
+                                 doc1.split())
+            data.append(result)
+        return data
