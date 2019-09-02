@@ -19,6 +19,7 @@ from multiprocessing import Pool
 
 from .text_vectorizer import *
 from .vector_cluster import *
+from .sts_similarity import *
 
 from .const import Const as const
 from .util import hash as util_hash
@@ -124,29 +125,38 @@ class ScanHelper:
         tv.vectorize()
         tv_time = tv.get_time()
 
-        clsparams = []
-
-        for clsparam in const.MLCLSPARAMS:
-            clsparams.append(self.cl_conf[clsparam].split(','))
-
-        args = []
         acc = []
 
-        for clsparam in product(*clsparams):
-            for ii, value in enumerate(clsparam):
-                conf.set(cluster,
-                         const.MLCLSPARAMS[ii],
-                         value)
-            myconf['cl'] = conf[cluster]
+        if self.cl_conf['sts_dir'] != 'dummy':
+            ss = StsSimilarity(myconf)
+            ss.similarity()
 
-            vc = VectorCluster(myconf)
-            vc.clustering()
-            vc_time = vc.get_time()
-
-            for ii, acc_tmp in enumerate(vc.get_accuracy()):
-                acc_tmp['vector_time'] = tv_time[ii]['time']      
-                acc_tmp['cluster_time'] = vc_time[ii]['time']      
+            for ii, acc_tmp in enumerate(ss.get_accuracy()):
+                acc_tmp['vector_time'] = 0      
+                acc_tmp['cluster_time'] = 0
                 acc.append(acc_tmp)
+
+        else:
+            clsparams = []
+
+            for clsparam in const.MLCLSPARAMS:
+                clsparams.append(self.cl_conf[clsparam].split(','))
+
+            for clsparam in product(*clsparams):
+                for ii, value in enumerate(clsparam):
+                    conf.set(cluster,
+                             const.MLCLSPARAMS[ii],
+                             value)
+                myconf['cl'] = conf[cluster]
+
+                vc = VectorCluster(myconf)
+                vc.clustering()
+                vc_time = vc.get_time()
+
+                for ii, acc_tmp in enumerate(vc.get_accuracy()):
+                    acc_tmp['vector_time'] = tv_time[ii]['time']      
+                    acc_tmp['cluster_time'] = vc_time[ii]['time']      
+                    acc.append(acc_tmp)
 
         shutil.rmtree(conf[cluster]['model_dir'])       
   
