@@ -86,9 +86,13 @@ class AnomalyAlert:
     def plot(self):
         for prediction in self.predictions:
             self.plot_paths = util_path.plot_paths(self.conf['cl'], prediction['service'])
-            self.plot_clustering(prediction['data'], 
-                                 prediction['tags'], 
-                                 prediction['pred_data'])
+      
+            if (len(prediction['data'][0]) > 50):
+                logger.info('Skil plot clustering because of a large dimension.')
+            else:
+                self.plot_clustering(prediction['data'], 
+                                     prediction['tags'], 
+                                     prediction['pred_data'])
             self.plot_tree(prediction['data'], 
                            prediction['pred_data'],
                            prediction['docs'])
