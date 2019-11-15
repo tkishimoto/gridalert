@@ -36,6 +36,7 @@ class DataConverter:
 
         else:
             logger.info('No inputs defined.')
+            return
 
         db = Sqlite3Helper(conf) 
         db.create_table()
