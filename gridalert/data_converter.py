@@ -24,10 +24,18 @@ class DataConverter:
         class_name = conf['cl']['text_type'].capitalize() + 'Template'
         template = globals()[class_name](conf)
         template.initialize()
+ 
 
-        texts = glob.glob(conf['cl']['text_input'])
-        logger.info('input texts: %s' % (conf['cl']['text_input']))
-        logger.info('# of text samples: %s' % (len(texts)))
+        if conf['cl']['text_input'] != 'dummy':
+            texts = glob.glob(conf['cl']['text_input'])
+            logger.info('input texts: %s' % (conf['cl']['text_input']))
+            logger.info('# of text samples: %s' % (len(texts)))
+
+        elif conf['cl']['es_host'] != 'dummy':
+            logger.info('elasticsearch host: %s' % (conf['cl']['es_host']))
+
+        else:
+            logger.info('No inputs defined.')
 
         db = Sqlite3Helper(conf) 
         db.create_table()
