@@ -177,7 +177,6 @@ class ElasticTemplate:
 
                 data_filter = data_filter + ' ' + word
 
-            counter += 1
             data_filter = process + ' : ' + data_filter
             if data_filter in messages.keys():
                 messages[data_filter] += 1
