@@ -49,17 +49,15 @@ class ElasticTemplate:
             metadata = ''
             label    = '1'
      
-            data = self.aggregate_dpm(messages, scroll)  
-            buffers.append([host, date, service,
-                            metadata, data, label])
+            for data in self.aggregate_dpm(messages, scroll):
+                buffers.append([host, date, service,
+                                metadata, data, label])
 
         return buffers
 
 
 
     def aggregate_dpm(self, messages, scroll):
-
-        counter  = 0 
 
         for res in scroll:
             r = res['_source']
@@ -186,19 +184,14 @@ class ElasticTemplate:
             else:
                 messages[data_filter] = 1
 
-
-            if counter > 1000:
-                break
-
-        result = ''
+        results = []
 
         messages_sorted = sorted(messages.items(),
                                  key=lambda x:-x[1])
         for data in messages_sorted:
             count = str(data[1]).rjust(8)
             message = data[0]
-            result = result + '%s time(s) : %s\n' % (count, message)   
+            results.append('%s time(s) : %s\n' % (count, message))  
 
-        result = result + '\n'
-        return result
+        return results
     
