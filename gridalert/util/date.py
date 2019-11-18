@@ -31,4 +31,4 @@ def in_sqdate(date, start, end):
     date  = sqdate_to_unix(date)
     start = sqdate_to_unix(start)
     end   = sqdate_to_unix(end)
-    return (date > start) and (date < end)
+    return (date >= start) and (date <= end)

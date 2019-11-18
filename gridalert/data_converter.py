@@ -5,6 +5,7 @@ logger = getLogger(__name__)
 import glob
 
 from .sqlite3_helper import *
+from .elastic_helper import *
 from .template import *
 
 from .util import match as util_match
@@ -33,7 +34,11 @@ class DataConverter:
 
         elif conf['cl']['es_host'] != 'dummy':
             logger.info('elasticsearch host: %s' % (conf['cl']['es_host']))
+            es = ElasticHelper(conf) 
+            texts = es.get_indices()
+            print(texts)
 
+              
         else:
             logger.info('No inputs defined.')
             return
