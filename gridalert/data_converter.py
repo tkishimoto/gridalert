@@ -36,8 +36,6 @@ class DataConverter:
             logger.info('elasticsearch host: %s' % (conf['cl']['es_host']))
             es = ElasticHelper(conf) 
             texts = es.get_indices()
-            print(texts)
-
               
         else:
             logger.info('No inputs defined.')

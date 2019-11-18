@@ -2,6 +2,9 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
+import sys
+import re
+
 from elasticsearch import Elasticsearch, helpers
 from elasticsearch.helpers import scan
 
@@ -43,3 +46,12 @@ class ElasticHelper:
                     results.append(ii)
 
         return results
+
+
+    def get_scroll(self, query, index):
+        scroll = scan(client=self.es,
+                      query=query,
+                      index=index,
+                      size = 10000)
+
+        return scroll
